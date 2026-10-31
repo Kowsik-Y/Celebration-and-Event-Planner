@@ -1,0 +1,9 @@
+# Rules for Celebration & Event Planner
+
+- Stack: Next.js 15 (TypeScript), React 19, SQLite (`better-sqlite3`), HeroUI (`@heroui/react`), Tailwind CSS, Biome.
+- No Python code under any circumstances.
+- Use HeroUI for all UI elements (Navbar, Button, Card, Modal, Input, Table, Badge, Dropdown, Progress, Tabs, Accordion).
+- Strict validation: Biome linter + Zod schemas for all forms, APIs, and AI structured outputs.
+- Test with Vitest for business logic (budgets, timelines, checklist generation, event presets).
+- Never write raw unparameterized SQL. Always use prepared statements or type-safe repositories.
+- Accessible: ensure keyboard navigation and ARIA labels.
