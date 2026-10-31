@@ -20,6 +20,21 @@ export class EventRepository {
     return db.prepare("SELECT * FROM events ORDER BY created_at DESC").all() as EventRecord[];
   }
 
+  static getEventsByUser(userId?: string | null, role?: string | null): EventRecord[] {
+    const db = getDb();
+    if (!userId) {
+      return db.prepare("SELECT * FROM events ORDER BY created_at DESC").all() as EventRecord[];
+    }
+    // Planners and admins oversee all celebrations across the entire studio
+    if (role === "planner" || role === "admin") {
+      return db.prepare("SELECT * FROM events ORDER BY created_at DESC").all() as EventRecord[];
+    }
+    // Specific clients (couples, hosts) only access events assigned to them
+    return db
+      .prepare("SELECT * FROM events WHERE user_id = ? ORDER BY created_at DESC")
+      .all(userId) as EventRecord[];
+  }
+
   static getEventById(id: string): EventRecord | null {
     const db = getDb();
     const event = db.prepare("SELECT * FROM events WHERE id = ?").get(id);
@@ -28,6 +43,7 @@ export class EventRepository {
 
   static createEvent(data: {
     id: string;
+    user_id?: string;
     title: string;
     vertical: "wedding" | "birthday" | "community";
     target_budget: number;
@@ -40,11 +56,13 @@ export class EventRepository {
   }): EventRecord {
     const db = getDb();
     const now = new Date().toISOString();
+    const userId = data.user_id || "usr_planner_elena";
     db.prepare(`
-      INSERT INTO events (id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO events (id, user_id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.id,
+      userId,
       data.title,
       data.vertical,
       data.target_budget,

@@ -5,17 +5,20 @@ import { logoutUser } from "@/store/slices/authSlice";
 import { Avatar, AvatarFallback, AvatarImage, Button, Chip } from "@heroui/react";
 import { CalendarHeart, LogOut, PlusCircle, ShieldCheck, User } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export function AppNavbar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
-  const router = useRouter();
   async function handleLogout() {
-    await dispatch(logoutUser());
-    router.push("/login");
-    router.refresh();
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (_err) {
+      // Network failure fallback
+    }
+    dispatch(logoutUser());
+    window.location.href = "/login";
   }
 
   return (

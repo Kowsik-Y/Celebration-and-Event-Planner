@@ -7,7 +7,7 @@ export interface SessionPayload {
 
 // In-memory sliding rate limiter for edge/proxy middleware
 const edgeRateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const MAX_ATTEMPTS = 15;
+const MAX_ATTEMPTS = process.env.NODE_ENV === "development" ? 100 : 20;
 const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
 export function checkEdgeRateLimit(key: string): { allowed: boolean; remaining: number } {

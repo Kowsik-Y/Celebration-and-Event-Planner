@@ -1,6 +1,8 @@
 import { EventRepository } from "@/db/repository";
 import { generateEventPlan } from "@/lib/ai/client";
 import { CreateEventInputSchema } from "@/lib/ai/schemas";
+import { verifySessionToken } from "@/lib/auth/security";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -15,6 +17,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const cookieStore = await cookies();
+    const token = cookieStore.get("celebrate_session")?.value;
+    const session = token ? verifySessionToken(token) : null;
+
     const input = parsedInput.data;
     const { blueprint, source } = await generateEventPlan(input);
 
@@ -22,6 +28,7 @@ export async function POST(request: Request) {
     const eventId = `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     EventRepository.createEvent({
       id: eventId,
+      user_id: session?.userId || "usr_planner_elena",
       title: blueprint.title || input.title,
       vertical: input.vertical,
       target_budget: blueprint.targetBudget || input.targetBudget,

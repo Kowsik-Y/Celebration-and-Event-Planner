@@ -150,6 +150,32 @@ describe("Redux State Management Store", () => {
   });
 });
 
+describe("Role-Based Event Access & Personalization", () => {
+  it("isolates events per user persona while granting planners and admins studio-wide access", async () => {
+    const { EventRepository } = await import("@/db/repository");
+
+    // Couple persona only accesses their assigned wedding event
+    const coupleEvents = EventRepository.getEventsByUser("usr_couple_sofia", "couple");
+    expect(coupleEvents.length).toBe(1);
+    expect(coupleEvents[0].id).toBe("evt-wedding-amalfi");
+    expect(coupleEvents[0].vertical).toBe("wedding");
+
+    // Host persona only accesses their civic fundraiser gala
+    const hostEvents = EventRepository.getEventsByUser("usr_host_marcus", "host");
+    expect(hostEvents.length).toBe(1);
+    expect(hostEvents[0].id).toBe("evt-comm-tech-arts");
+    expect(hostEvents[0].vertical).toBe("community");
+
+    // Lead Planner persona accesses all celebrations in the studio portfolio
+    const plannerEvents = EventRepository.getEventsByUser("usr_planner_elena", "planner");
+    expect(plannerEvents.length).toBeGreaterThanOrEqual(3);
+
+    // Admin persona accesses all events
+    const adminEvents = EventRepository.getEventsByUser("usr_admin_alexander", "admin");
+    expect(adminEvents.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
 describe("Next.js Proxy Middleware & Security Headers", () => {
   it("verifies getSessionSecret returns configured or cached store secret", async () => {
     const { getSessionSecret } = await import("@/lib/auth/security");

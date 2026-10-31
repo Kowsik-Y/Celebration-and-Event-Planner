@@ -3,26 +3,26 @@
 import { AppNavbar } from "@/components/navbar";
 import { useAppSelector } from "@/store/hooks";
 import { Spinner } from "@heroui/react";
-import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 
 export default function PrivateLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const { isAuthenticated, hasCheckedAuth } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Only redirect once session verification has definitely finished
     if (hasCheckedAuth && !isAuthenticated) {
-      router.replace("/login");
+      window.location.href = "/login";
     }
-  }, [hasCheckedAuth, isAuthenticated, router]);
+  }, [hasCheckedAuth, isAuthenticated]);
 
   // While checking auth on initial mount or unauthenticated, show loading screen
   if (!hasCheckedAuth || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <Spinner size="lg" color="accent" />
-        <p className="mt-3 text-xs text-muted">Authenticating celebration session...</p>
+        <p className="mt-3 text-xs text-muted">
+          {!isAuthenticated ? "Signing out..." : "Authenticating celebration session..."}
+        </p>
       </div>
     );
   }

@@ -3,7 +3,11 @@ import path from "node:path";
 import { hashPassword } from "@/lib/auth/security";
 import Database from "better-sqlite3";
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), "events.sqlite");
+const DB_PATH =
+  process.env.DATABASE_PATH ||
+  (process.env.VERCEL
+    ? path.join("/tmp", "events.sqlite")
+    : path.join(process.cwd(), "events.sqlite"));
 
 let dbInstance: Database.Database | null = null;
 
@@ -15,6 +19,17 @@ export function getDb(): Database.Database {
   const dbDir = path.dirname(DB_PATH);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  if (process.env.VERCEL && !fs.existsSync(DB_PATH)) {
+    const seedPath = path.join(process.cwd(), "events.sqlite");
+    if (fs.existsSync(seedPath)) {
+      try {
+        fs.copyFileSync(seedPath, DB_PATH);
+      } catch (err) {
+        console.warn("Failed to copy seed database to /tmp:", err);
+      }
+    }
   }
 
   const db = new Database(DB_PATH);
@@ -223,10 +238,11 @@ function seedInitialData(db: Database.Database): void {
 
   // Insert Flagship Wedding Event
   db.prepare(`
-    INSERT INTO events (id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, user_id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     weddingId,
+    "usr_couple_sofia",
     "Villa Cimbrone Destination Wedding",
     "wedding",
     65000,
@@ -624,10 +640,11 @@ function seedInitialData(db: Database.Database): void {
   // Seed Birthday Event Template
   const bdayId = "evt-bday-50th";
   db.prepare(`
-    INSERT INTO events (id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, user_id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     bdayId,
+    "usr_planner_elena",
     "Golden Jubilee 50th Milestone Gala",
     "birthday",
     22000,
@@ -644,10 +661,11 @@ function seedInitialData(db: Database.Database): void {
   // Seed Community Gala Template
   const commId = "evt-comm-tech-arts";
   db.prepare(`
-    INSERT INTO events (id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO events (id, user_id, title, vertical, target_budget, total_spent, guest_count, event_date, location, theme, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     commId,
+    "usr_host_marcus",
     "Civic Arts & Culture Fundraiser Gala",
     "community",
     48000,

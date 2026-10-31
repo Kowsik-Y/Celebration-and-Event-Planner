@@ -116,6 +116,9 @@ References an embedded SQLite-indexed domain knowledge base with verified benchm
 ```
 
 ### Core Modules
+
+> [!NOTE]
+> **Database Seed & SQL Dump**: The repository includes the pre-seeded SQLite database (`events.sqlite`, `events.sqlite-shm`, `events.sqlite-wal`) and a full SQL schema/seed dump (`events.sql`) containing demo celebrations, users, budgets, timeline schedules, and RAG knowledge benchmarks.
 1. **Dashboard (`/`)**: Active celebration command center with budget gauges, countdown timers, and quick-start templates.
 2. **Interactive Wizard (`/events/new`)**: Configure celebration vertical, guest count, target budget, date, and aesthetic vision.
 3. **Dual-Tier AI Engine**:

@@ -13,11 +13,10 @@ import {
   Lock,
   Mail,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 interface DemoAccount {
@@ -76,7 +75,6 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 
 function LoginForm() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawCallback = searchParams.get("callbackUrl");
   const targetUrl = rawCallback && rawCallback !== "/login" ? rawCallback : "/";
@@ -97,16 +95,16 @@ function LoginForm() {
   // If already authenticated, immediately route to the dashboard
   useEffect(() => {
     if (mounted && hasCheckedAuth && isAuthenticated && user) {
-      router.replace(targetUrl);
+      window.location.href = targetUrl;
     }
-  }, [mounted, hasCheckedAuth, isAuthenticated, user, targetUrl, router]);
+  }, [mounted, hasCheckedAuth, isAuthenticated, user, targetUrl]);
 
   async function handleDemoLogin(role: UserRole) {
     setPendingRole(role);
     try {
       const res = await dispatch(loginWithDemo(role));
       if (loginWithDemo.fulfilled.match(res)) {
-        router.replace(targetUrl);
+        window.location.href = targetUrl;
       }
     } finally {
       setPendingRole(null);
@@ -121,7 +119,7 @@ function LoginForm() {
     try {
       const res = await dispatch(loginWithCredentials({ email, password }));
       if (loginWithCredentials.fulfilled.match(res)) {
-        router.replace(targetUrl);
+        window.location.href = targetUrl;
       }
     } finally {
       setIsSubmittingCustom(false);
@@ -207,10 +205,6 @@ function LoginForm() {
               <span className="text-xs font-medium text-foreground">
                 Select a Verified Demo Persona:
               </span>
-              <Chip size="sm" variant="soft" color="success" className="text-[10px] h-5">
-                <ShieldCheck className="w-3 h-3 inline mr-1" />
-                PBKDF2 Verified
-              </Chip>
             </div>
 
             <div className="grid grid-cols-1 gap-2.5">
@@ -223,7 +217,7 @@ function LoginForm() {
                     key={account.email}
                     className="border border-border bg-surface hover:border-accent transition-all shadow-none"
                   >
-                    <CardContent className="p-3.5 flex items-center justify-between gap-3">
+                    <CardContent className="p-3.5 flex items-center justify-between gap-3 flex-row">
                       <div className="flex items-start gap-3">
                         <div className="w-9 h-9 rounded-xl bg-surface-secondary border border-border flex items-center justify-center shrink-0 text-accent mt-0.5">
                           <Icon className="w-4 h-4" />
@@ -329,16 +323,6 @@ function LoginForm() {
             </div>
           </form>
         )}
-      </div>
-
-      {/* Footer Security Badges */}
-      <div className="p-4 border-t border-border bg-surface-secondary/20 flex flex-wrap justify-between items-center text-[11px] text-muted gap-2">
-        <span className="flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-accent" /> HMAC-SHA256 Signed Session Token
-        </span>
-        <span className="flex items-center gap-1.5">
-          <ShieldCheck className="w-3 h-3 text-success" /> Brute-Force Rate Limiting Active
-        </span>
       </div>
     </Card>
   );

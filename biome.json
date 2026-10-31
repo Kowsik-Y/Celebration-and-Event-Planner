@@ -9,6 +9,7 @@
     "ignoreUnknown": true,
     "ignore": [
       ".next/**",
+      ".vercel/**",
       "node_modules/**",
       ".agents/**",
       "dist/**",
