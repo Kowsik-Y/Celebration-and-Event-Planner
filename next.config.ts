@@ -4,7 +4,6 @@ import type { NextConfig } from "next";
  * Enterprise Security Headers tailored for Celebration & Event Planner:
  * - Allows Unsplash for avatars and event imagery
  * - Allows Google Gemini / GenAI API endpoints
- * - Allows WebSocket (ws:// & wss://) on port 3001 for ADK multi-agent live traces
  * - Prevents clickjacking (X-Frame-Options: DENY) & MIME sniffing
  * - Strict Transport Security (HSTS)
  */
@@ -45,7 +44,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' ws: wss: https://generativelanguage.googleapis.com",
+      "connect-src 'self' https://generativelanguage.googleapis.com",
       "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
@@ -74,14 +73,13 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
 
-  // External server packages for better-sqlite3, Genkit AI, and WebSocket
+  // External server packages for better-sqlite3 and Genkit AI
   serverExternalPackages: [
     "better-sqlite3",
     "genkit",
     "@genkit-ai/core",
     "@genkit-ai/google-genai",
     "@opentelemetry/sdk-node",
-    "ws",
   ],
 
   // Image optimization domains for avatars and celebration assets

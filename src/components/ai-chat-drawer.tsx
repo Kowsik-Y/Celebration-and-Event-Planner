@@ -31,7 +31,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { MarkdownRenderer } from "./markdown-renderer";
 
 export type VerboseEventType =
@@ -252,75 +252,34 @@ export function AiChatDrawer({
   const [loading, setLoading] = useState(false);
   const [activeTraces, setActiveTraces] = useState<VerboseTrace[]>([]);
   const [streamingText, setStreamingText] = useState("");
-  const [wsConnected, setWsConnected] = useState(false);
 
-  const wsRef = useRef<WebSocket | null>(null);
   const currentTracesRef = useRef<VerboseTrace[]>([]);
+  const accumulatedTextRef = useRef<string>("");
   const startTimeRef = useRef<number>(Date.now());
-
-  // Initialize WebSocket connection to port 3001
-  useEffect(() => {
-    if (!isOpen) return;
-
-    let ws: WebSocket | null = null;
-    try {
-      ws = new WebSocket("ws://localhost:3001");
-
-      ws.onopen = () => {
-        setWsConnected(true);
-      };
-
-      ws.onclose = () => {
-        setWsConnected(false);
-      };
-
-      ws.onerror = () => {
-        setWsConnected(false);
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data: VerboseTrace = JSON.parse(event.data);
-          handleVerboseEvent(data);
-        } catch (e) {
-          console.error("WS parse error:", e);
-        }
-      };
-
-      wsRef.current = ws;
-    } catch (_err) {
-      setWsConnected(false);
-    }
-
-    return () => {
-      if (ws) {
-        ws.close();
-      }
-    };
-  }, [isOpen]);
 
   function handleVerboseEvent(trace: VerboseTrace) {
     if (trace.type === "token" && trace.message) {
-      setStreamingText((prev) => prev + trace.message);
+      accumulatedTextRef.current += trace.message;
+      setStreamingText(accumulatedTextRef.current);
     } else if (trace.type === "done") {
       setLoading(false);
       const elapsed = Date.now() - startTimeRef.current;
       const finalTraces = [...currentTracesRef.current];
+      const finalText = accumulatedTextRef.current.trim();
 
-      setStreamingText((finalText) => {
-        if (finalText.trim()) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              text: finalText.trim(),
-              traces: finalTraces,
-              durationMs: elapsed,
-            },
-          ]);
-        }
-        return "";
-      });
+      if (finalText) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            text: finalText,
+            traces: finalTraces,
+            durationMs: elapsed,
+          },
+        ]);
+      }
+      accumulatedTextRef.current = "";
+      setStreamingText("");
       setActiveTraces([]);
       currentTracesRef.current = [];
     } else {
@@ -339,22 +298,11 @@ export function AiChatDrawer({
     setLoading(true);
     setActiveTraces([]);
     currentTracesRef.current = [];
+    accumulatedTextRef.current = "";
     startTimeRef.current = Date.now();
     setStreamingText("");
 
-    // Option A: Use active WebSocket
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: "chat",
-          eventId,
-          message: text,
-        }),
-      );
-      return;
-    }
-
-    // Option B: Fallback to Server-Sent Events (SSE)
+    // Directly use Server-Sent Events (SSE) streaming for all environments
     try {
       const res = await fetch("/api/ai/live-chat", {
         method: "POST",
@@ -415,7 +363,7 @@ export function AiChatDrawer({
           <SheetDialog className="h-full flex flex-col bg-surface border-l border-border">
             <SheetCloseTrigger className="top-4 right-4" aria-label="Close concierge" />
 
-            {/* Header: Persona info with WebSocket/SSE status chip */}
+            {/* Header: Persona info with ADK live streaming status chip */}
             <SheetHeader className="p-4 flex flex-col gap-2 border-b border-border pb-3 pr-12">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow">
@@ -424,14 +372,9 @@ export function AiChatDrawer({
                 <div>
                   <SheetHeading className="text-base font-bold text-foreground flex items-center gap-2">
                     {personaName} Concierge
-                    <Chip
-                      size="sm"
-                      color={wsConnected ? "success" : "accent"}
-                      variant="soft"
-                      className="h-5 text-[10px]"
-                    >
+                    <Chip size="sm" color="accent" variant="soft" className="h-5 text-[10px]">
                       <Zap className="w-2.5 h-2.5 inline mr-1" />
-                      {wsConnected ? "ADK WebSocket Live" : "ADK SSE Stream"}
+                      ADK Live Stream (SSE)
                     </Chip>
                   </SheetHeading>
                   <p className="text-xs text-muted">

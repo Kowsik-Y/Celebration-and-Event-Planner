@@ -6,22 +6,26 @@ import { Spinner } from "@heroui/react";
 import { type ReactNode, useEffect } from "react";
 
 export default function PrivateLayout({ children }: { children: ReactNode }) {
-  const { isAuthenticated, hasCheckedAuth } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, hasCheckedAuth, isLoggingOut } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Only redirect once session verification has definitely finished
-    if (hasCheckedAuth && !isAuthenticated) {
+    if (hasCheckedAuth && !isAuthenticated && !isLoggingOut) {
       window.location.href = "/login";
     }
-  }, [hasCheckedAuth, isAuthenticated]);
+  }, [hasCheckedAuth, isAuthenticated, isLoggingOut]);
 
   // While checking auth on initial mount or unauthenticated, show loading screen
-  if (!hasCheckedAuth || !isAuthenticated) {
+  if (!hasCheckedAuth || !isAuthenticated || isLoggingOut) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <Spinner size="lg" color="accent" />
         <p className="mt-3 text-xs text-muted">
-          {!isAuthenticated ? "Signing out..." : "Authenticating celebration session..."}
+          {isLoggingOut
+            ? "..."
+            : !hasCheckedAuth
+              ? "Authenticating celebration session..."
+              : "Redirecting to login..."}
         </p>
       </div>
     );

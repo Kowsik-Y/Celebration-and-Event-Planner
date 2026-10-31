@@ -1,5 +1,7 @@
 import { EventContextManager } from "@/lib/ai/context-manager";
+import { getPersonaForVertical } from "@/lib/ai/personas";
 import { retrieveRelevantKnowledge } from "@/lib/ai/rag/retriever";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { calculateBudgetShiftTool, detectTimelineCollisionsTool } from "./tools";
 
 export type VerboseEventType =
@@ -229,9 +231,94 @@ Timeline Specialist Report:
 
     let finalReply = "";
 
-    if (subAgentUsed === "budget_specialist") {
-      finalReply = `
-Hello! Celebration & Wedding Planner here with our financial logistics assessment for **"${context.event.title}"**.
+    // If Google Gemini API Key is configured, generate live dynamic response
+    const apiKey = process.env.GEMINI_API_KEY;
+    const persona = getPersonaForVertical(context.event.vertical);
+
+    if (apiKey && apiKey.trim().length > 0) {
+      try {
+        emit({
+          type: "thought",
+          agent: `${persona.name} (${persona.title})`,
+          message: "Invoking Google Gemini AI with multi-agent context and RAG benchmarks...",
+        });
+
+        const prompt = `
+You are ${persona.name}, ${persona.title}.
+${persona.systemPrompt}
+
+LIVE CELEBRATION CONTEXT:
+- Title: "${context.event.title}" (${context.event.vertical.toUpperCase()})
+- Location: ${context.event.location}
+- Date: ${context.event.event_date}
+- Target Budget: $${context.budgetSummary.target.toLocaleString()} (Committed: $${context.budgetSummary.committed.toLocaleString()}, Remaining Reserve: $${context.budgetSummary.remaining.toLocaleString()})
+- Guests: ${context.guestSummary.totalInvited} invited, ${context.guestSummary.attending} attending, ${context.guestSummary.pending} pending. Dietary Alerts: ${context.guestSummary.dietaryAlerts.join(", ") || "None"}
+- Timeline: ${context.timelineSummary.totalItems} milestones programmed. Next milestone: ${context.timelineSummary.nextMilestone || "All scheduled"}
+
+MULTI-AGENT SPECIALIST ANALYSIS:
+${subAgentFindings || "Standard multi-agent coordination."}
+
+VERIFIED RAG DOMAIN BENCHMARKS:
+${ragDocs.map((d) => `• ${d.title}: ${d.content}`).join("\n")}
+
+USER INQUIRY:
+"${userMessage}"
+
+INSTRUCTIONS:
+1. Provide a direct, intelligent response tailored specifically to the user's question.
+2. If this is a charity/community gala, focus on fundraising, donor engagement, live auction flow, and municipal safety.
+3. If this is a wedding, focus on ceremony pacing, golden-hour photo sequencing, and guest experience.
+4. If this is a milestone birthday, focus on personal tributes, pacing, and celebration logistics.
+5. Be professional, warm, concise, and highly actionable. Format with clean markdown.
+        `.trim();
+
+        const gemini = new GoogleGenerativeAI(apiKey);
+        const candidateModels = [
+          "gemini-2.0-flash",
+          "gemini-1.5-flash-latest",
+          "gemini-1.5-flash",
+          "gemini-pro",
+        ];
+
+        let streamResult = null;
+        for (const modelName of candidateModels) {
+          try {
+            const model = gemini.getGenerativeModel({ model: modelName });
+            streamResult = await model.generateContentStream(prompt);
+            if (streamResult) break;
+          } catch (_modelErr) {
+            // Try next model
+          }
+        }
+
+        if (streamResult) {
+          let accumulated = "";
+          for await (const chunk of streamResult.stream) {
+            const chunkText = chunk.text();
+            if (chunkText) {
+              accumulated += chunkText;
+              emit({
+                type: "token",
+                agent: `${persona.name} (${persona.title})`,
+                message: chunkText,
+              });
+            }
+          }
+
+          if (accumulated.trim().length > 0) {
+            finalReply = accumulated.trim();
+          }
+        }
+      } catch (geminiErr) {
+        console.warn("Gemini stream failed, falling back to heuristic:", geminiErr);
+      }
+    }
+
+    // Heuristic Fallback if Gemini API key is absent or failed
+    if (!finalReply) {
+      if (subAgentUsed === "budget_specialist") {
+        finalReply = `
+${persona.name} here with our financial logistics assessment for **"${context.event.title}"**.
 
 Based on our multi-agent budget analysis:
 - **Current Target Budget:** $${context.budgetSummary.target.toLocaleString()}
@@ -240,12 +327,19 @@ Based on our multi-agent budget analysis:
 
 ${subAgentFindings}
 
-**Celebration & Wedding Planner's Concierge Recommendation:**
-Always guard your mandatory 8% emergency contingency ($${Math.round(context.budgetSummary.target * 0.08).toLocaleString()}). If guest headcounts or catering minimums increase, offset them by consolidating stationery/favors or negotiating beverage package hours rather than letting your contingency buffer erode.
-      `.trim();
-    } else if (subAgentUsed === "timeline_specialist") {
-      finalReply = `
-Celebration & Wedding Planner here reviewing your day-of run of show for **"${context.event.title}"**.
+**${persona.name}'s Financial Recommendation:**
+Always guard your mandatory 8% emergency contingency ($${Math.round(context.budgetSummary.target * 0.08).toLocaleString()}). If guest headcounts or production minimums increase, offset them by adjusting secondary rentals or sponsorship tiers rather than allowing your emergency buffer to erode.
+        `.trim();
+      } else if (subAgentUsed === "timeline_specialist") {
+        const verticalRule =
+          context.event.vertical === "community"
+            ? "**Live Auction & Donor Appeal Rule:** Schedule your live auction directly between entree service and dessert—never at the end of the evening. Keep active auction bidding to a strict 20-minute window (maximum 4–6 premier lots) followed immediately by the direct paddle-raise / fund-a-need appeal while audience energy and donor generosity are at their peak."
+            : context.event.vertical === "birthday"
+              ? "**Milestone Tribute Rule:** Schedule tribute speeches and photo retrospectives right before the celebratory toast. Limit speakers to 3–4 minutes each to maintain vibrant party energy before the live band or DJ transition."
+              : "**Golden-Hour Ceremony Rule:** Outdoor ceremonies and vow exchanges must conclude at least 60 minutes before sunset to capture golden-hour couple and family portraits without rushing guest reception dining.";
+
+        finalReply = `
+${persona.name} here reviewing your day-of run of show for **"${context.event.title}"**.
 
 Our timeline sequencing audit reports:
 - **Total Scheduled Milestones:** ${context.timelineSummary.totalItems} (${context.timelineSummary.completedItems} marked complete)
@@ -253,32 +347,32 @@ Our timeline sequencing audit reports:
 
 ${subAgentFindings}
 
-**Celebration & Wedding Planner's Logistics Rule:**
-Remember our golden-hour rule: outdoor vows must finish at least 60 minutes before sunset to capture golden-hour couple portraits without rushing into reception dining.
-      `.trim();
-    } else {
-      finalReply = `
-Hello! Celebration & Wedding Planner here monitoring your celebration **"${context.event.title}"** (${context.event.location}).
+${verticalRule}
+        `.trim();
+      } else {
+        finalReply = `
+Hello! ${persona.name} here monitoring your celebration **"${context.event.title}"** (${context.event.location}).
 
 - **Guest Status:** ${context.guestSummary.attending} confirmed attending out of ${context.guestSummary.totalInvited} invited (${context.guestSummary.pending} pending).
 - **Dietary Flags:** ${context.guestSummary.dietaryAlerts.length > 0 ? context.guestSummary.dietaryAlerts.join(", ") : "None reported"}.
 - **Budget Balance:** $${context.budgetSummary.committed.toLocaleString()} committed of $${context.budgetSummary.target.toLocaleString()} budget.
 
 Our RAG domain knowledge base confirms that your milestones align with standard luxury celebration logistics. How can I or our specialized sub-agents assist you further?
-      `.trim();
-    }
+        `.trim();
+      }
 
-    // Stream out tokens in simulated chunks for live typewriter experience
-    const words = finalReply.split(" ");
-    for (let i = 0; i < words.length; i += 4) {
-      const chunk = `${words.slice(i, i + 4).join(" ")} `;
-      emit({
-        type: "token",
-        agent: "Celebration & Wedding Planner (Lead Orchestrator)",
-        message: chunk,
-      });
-      // micro-yield
-      await new Promise((r) => setTimeout(r, 20));
+      // Stream out tokens in simulated chunks for live typewriter experience
+      const words = finalReply.split(" ");
+      for (let i = 0; i < words.length; i += 4) {
+        const chunk = `${words.slice(i, i + 4).join(" ")} `;
+        emit({
+          type: "token",
+          agent: `${persona.name} (${persona.title})`,
+          message: chunk,
+        });
+        // micro-yield
+        await new Promise((r) => setTimeout(r, 20));
+      }
     }
 
     // Record memory in database

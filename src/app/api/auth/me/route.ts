@@ -25,11 +25,17 @@ export async function GET(request: Request) {
     }
 
     const user = UserRepository.getUserById(payload.userId);
-    if (!user) {
-      return NextResponse.json({ authenticated: false, user: null }, { status: 200 });
-    }
+    const safeUser = user
+      ? UserRepository.sanitizeUser(user)
+      : {
+          id: payload.userId,
+          email: payload.email,
+          name: payload.email.split("@")[0],
+          role: payload.role as "planner" | "couple" | "host" | "admin",
+          avatar_url: "",
+          created_at: new Date().toISOString(),
+        };
 
-    const safeUser = UserRepository.sanitizeUser(user);
     return NextResponse.json({ authenticated: true, user: safeUser }, { status: 200 });
   } catch (error) {
     console.error("Auth Me API error:", error);

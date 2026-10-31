@@ -6,6 +6,7 @@ export interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoggingOut: boolean;
   hasCheckedAuth: boolean;
   error: string | null;
 }
@@ -15,6 +16,7 @@ const initialState: AuthState = {
   token: null,
   isAuthenticated: false,
   isLoading: false,
+  isLoggingOut: false,
   hasCheckedAuth: false,
   error: null,
 };
@@ -163,12 +165,19 @@ export const authSlice = createSlice({
     });
 
     // Logout
+    builder.addCase(logoutUser.pending, (state) => {
+      state.isLoggingOut = true;
+    });
     builder.addCase(logoutUser.fulfilled, (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.isLoggingOut = false;
       state.hasCheckedAuth = true;
       state.error = null;
+    });
+    builder.addCase(logoutUser.rejected, (state) => {
+      state.isLoggingOut = false;
     });
   },
 });

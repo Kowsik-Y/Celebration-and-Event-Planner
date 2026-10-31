@@ -163,7 +163,7 @@ export function DashboardView({ initialEvents }: DashboardViewProps) {
             <h2 className="text-sm font-bold text-foreground">Google ADK &amp; Genkit RAG</h2>
             <p className="text-xs text-muted leading-relaxed">
               Multi-Agent collaboration with dedicated Budget and Timeline Specialists plus
-              real-time WebSocket verbose execution streaming.
+              real-time live verbose execution streaming.
             </p>
           </CardContent>
         </Card>

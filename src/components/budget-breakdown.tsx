@@ -238,7 +238,7 @@ export function BudgetBreakdown({
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(val: number) => [`$${Number(val).toLocaleString()}`, "Amount"]}
+                    formatter={(val) => [`$${Number(val ?? 0).toLocaleString()}`, "Amount"]}
                   />
                 </PieChart>
               </ResponsiveContainer>
