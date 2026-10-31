@@ -34,6 +34,9 @@ export function getDb(): Database.Database {
 
   const db = new Database(DB_PATH);
   db.pragma("journal_mode = WAL");
+  db.pragma("synchronous = NORMAL");
+  db.pragma("cache_size = -64000");
+  db.pragma("temp_store = MEMORY");
   db.pragma("foreign_keys = ON");
 
   initializeSchema(db);

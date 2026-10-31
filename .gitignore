@@ -57,7 +57,10 @@ next-env.d.ts
 # Vercel Deployment Metadata
 .vercel
 
-# Editor Temporary Files
+# Editor Temporary Files & Agent Skills
 *.swp
 *.swo
 *~
+.agents/
+.cursor/
+.vscode/

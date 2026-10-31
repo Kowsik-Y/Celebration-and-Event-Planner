@@ -11,7 +11,7 @@ interface MarkdownRendererProps {
 export function MarkdownRenderer({ content, className = "" }: MarkdownRendererProps) {
   return (
     <div
-      className={`prose prose-sm max-w-none text-foreground leading-relaxed break-words space-y-2 ${className}`}
+      className={`prose prose-sm max-w-none text-foreground leading-relaxed wrap-break-word space-y-2 ${className}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}

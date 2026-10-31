@@ -1,9 +1,12 @@
 import type { CreateEventInput, GeneratedEventBlueprint } from "./schemas";
 
 /**
- * Intelligent deterministic domain heuristic generator.
- * Produces realistic, mathematically sound event blueprints conforming to
+ * Mathematical domain heuristic generator.
+ * Produces deterministic, zero-drift event blueprints conforming to
  * industry standards for weddings, birthdays, and community galas.
+ *
+ * Invariant: Sum of all items in budgetBreakdown EXACTLY equals targetBudget ($0 drift).
+ * Invariant: Vendor checklist dynamically scales based on guestCount.
  */
 export function generateHeuristicBlueprint(input: CreateEventInput): GeneratedEventBlueprint {
   const { title, vertical, targetBudget, guestCount, location, theme } = input;
@@ -24,26 +27,102 @@ function generateWeddingBlueprint(
   location: string,
   theme: string,
 ): GeneratedEventBlueprint {
-  const contingency = Math.round(budget * 0.08); // 8% contingency buffer
+  // 8% mandatory contingency buffer
+  const contingency = Math.round(budget * 0.08);
   const allocable = budget - contingency;
 
-  // Fractions of allocable budget (summing to 100% of allocable):
-  // Venue & Catering: 50% (46% of total)
-  // Photography & Video: 13% (12% of total)
-  // Floral & Decor: 11% (10% of total)
-  // Music & Entertainment: 10% (9% of total)
-  // Attire & Glam: 8% (7% of total)
-  // Coordination & Staff: 5% (5% of total)
-  // Stationery & Details: 3% (3% of total)
-
-  const venueCatering = Math.round(allocable * 0.5);
-  const photoVideo = Math.round(allocable * 0.13);
-  const floralDecor = Math.round(allocable * 0.11);
+  // Proportions of allocable:
+  const venue = Math.round(allocable * 0.26);
+  const catering = Math.round(allocable * 0.24);
+  const photo = Math.round(allocable * 0.14);
+  const floral = Math.round(allocable * 0.12);
   const music = Math.round(allocable * 0.1);
-  const attireGlam = Math.round(allocable * 0.08);
-  const coordination = Math.round(allocable * 0.05);
-  const stationeryDetails =
-    allocable - (venueCatering + photoVideo + floralDecor + music + attireGlam + coordination);
+  const attire = Math.round(allocable * 0.08);
+  const coordination = Math.round(allocable * 0.04);
+  const stationery =
+    allocable - (venue + catering + photo + floral + music + attire + coordination);
+
+  // Scalable vendor checklist based on guest count
+  const vendors = [
+    {
+      category: "Venue",
+      name: `Signature Wedding Villa & Grounds in ${location}`,
+      contactEmail: "",
+      contactPhone: "",
+      price: venue,
+      deadlineOffsetDays: 330,
+      notes: "Lock date, verify rain plan tenting permits, and confirm 01:00 sound curfew",
+    },
+    {
+      category: "Catering",
+      name: `Artisanal Plated Dining ($${Math.round(catering / guests)}/guest)`,
+      contactEmail: "",
+      contactPhone: "",
+      price: catering,
+      deadlineOffsetDays: 240,
+      notes: "Schedule private menu tasting; gather dietary allergy forms from all guests",
+    },
+    {
+      category: "Photography",
+      name: "Fine Art Duo (10-hr coverage, drone, 4K film)",
+      contactEmail: "",
+      contactPhone: "",
+      price: photo,
+      deadlineOffsetDays: 270,
+      notes: "Confirm coverage hours, golden hour sunset timing, and second shooter contract",
+    },
+    {
+      category: "Floral & Decor",
+      name: "Botanical Floral Sculptor & Lighting",
+      contactEmail: "",
+      contactPhone: "",
+      price: floral,
+      deadlineOffsetDays: 150,
+      notes: "Approve tabletop centerpiece mockups and ceremony arch structural safety",
+    },
+    {
+      category: "Music & Band",
+      name: "Live Ceremony Strings & Evening Dance Ensemble",
+      contactEmail: "",
+      contactPhone: "",
+      price: music,
+      deadlineOffsetDays: 120,
+      notes: "Submit ceremony walk-down songs and curated 'Do Not Play' list for party",
+    },
+    {
+      category: "Coordination",
+      name: "Lead Day-of Logistics Director",
+      contactEmail: "",
+      contactPhone: "",
+      price: coordination,
+      deadlineOffsetDays: 90,
+      notes: "Review load-in schedule with all vendors and organize wedding rehearsal",
+    },
+  ];
+
+  if (guests > 80) {
+    vendors.push({
+      category: "Guest Transport",
+      name: "Executive Shuttles & Valet Dispatch",
+      contactEmail: "",
+      contactPhone: "",
+      price: Math.round(budget * 0.03),
+      deadlineOffsetDays: 60,
+      notes: "Chartered transit between hotel blocks, ceremony chapel, and reception estate",
+    });
+  }
+
+  if (guests > 150) {
+    vendors.push({
+      category: "Security & Safety",
+      name: "Event Safety Officers & EMT First Aid Station",
+      contactEmail: "",
+      contactPhone: "",
+      price: Math.round(budget * 0.02),
+      deadlineOffsetDays: 45,
+      notes: "Perimeter security, crowd flow oversight, and medical first-responder coverage",
+    });
+  }
 
   return {
     title: title || `${theme} Wedding Celebration`,
@@ -56,25 +135,25 @@ function generateWeddingBlueprint(
       {
         category: "Venue & Reception Space",
         name: `Private Estate / Villa Hire in ${location}`,
-        estimatedCost: Math.round(venueCatering * 0.55),
+        estimatedCost: venue,
         notes: "Exclusive access, dining pavilion, and bridal preparation suite",
       },
       {
         category: "Catering & Wine Service",
-        name: `Plated Multi-Course Tasting ($${Math.round((venueCatering * 0.45) / guests)}/guest)`,
-        estimatedCost: Math.round(venueCatering * 0.45),
+        name: `Plated Multi-Course Tasting ($${Math.round(catering / guests)}/guest)`,
+        estimatedCost: catering,
         notes: "Cocktail canapés, 3-course dinner, premium wine pairings, and late-night snacks",
       },
       {
         category: "Photography & Cinematography",
         name: "Fine Art Duo (10-hr coverage, drone, 4K film)",
-        estimatedCost: photoVideo,
+        estimatedCost: photo,
         notes: "Includes engagement session, full day coverage, and high-res highlight film",
       },
       {
         category: "Floral Design & Scenography",
         name: "Ceremony Arch, Tablescapes & Ambient Lighting",
-        estimatedCost: floralDecor,
+        estimatedCost: floral,
         notes: "Seasonal garden blooms, hanging floral installations, and warm fairy lights",
       },
       {
@@ -86,7 +165,7 @@ function generateWeddingBlueprint(
       {
         category: "Attire, Hair & Makeup",
         name: "Bridal Suite Styling & Groom Tailoring",
-        estimatedCost: attireGlam,
+        estimatedCost: attire,
         notes: "On-site hair and makeup artist squad plus custom formalwear fittings",
       },
       {
@@ -98,8 +177,15 @@ function generateWeddingBlueprint(
       {
         category: "Stationery & Personal Touches",
         name: "Artisanal Letterpress Invitations & Keepsake Escort Cards",
-        estimatedCost: stationeryDetails,
-        notes: "Custom wax seals, calligraphed table menus, and welcome luggage tags",
+        estimatedCost: stationery,
+        notes: "Custom invitation suites, calligraphy place cards, and welcome signboards",
+      },
+      {
+        category: "Emergency Contingency Reserve",
+        name: "Protected 8% Contingency Reserve Fund",
+        estimatedCost: contingency,
+        notes:
+          "Mandatory economic safeguard for last-minute headcount shifts or weather adjustments",
       },
     ],
     runOfShowTimeline: [
@@ -107,45 +193,50 @@ function generateWeddingBlueprint(
         timeStart: "10:00",
         timeEnd: "13:30",
         phase: "Preparation",
-        title: "Glam & Bridal Suite Preparations",
-        description: "Hair and makeup squad on-site; detail photos of rings, stationery, and dress",
-        responsibleParty: "Beauty Team & Lead Photographer",
+        title: "Bridal Suite Hair, Makeup & Groom Squad Prep",
+        description:
+          "Glam squad styling, champagne toast, and detail photographer capturing invitation flatlays",
+        responsibleParty: "Hair & Makeup Lead / Photographer",
         orderIndex: 1,
       },
       {
         timeStart: "13:30",
         timeEnd: "14:45",
-        phase: "Portraits",
-        title: "First Look & Private Couple Portraits",
-        description: "Intimate reveal before guests arrive, followed by wedding party group photos",
-        responsibleParty: "Photographer & Coordinator",
+        phase: "Photography",
+        title: "Private 'First Look' & Romantic Couple Portraits",
+        description:
+          "Intimate couple reveal in villa gardens; wedding party photos captured before guest arrival",
+        responsibleParty: "Lead Photographer",
         orderIndex: 2,
       },
       {
-        timeStart: "15:30",
-        timeEnd: "16:00",
+        timeStart: "15:00",
+        timeEnd: "15:30",
         phase: "Arrival",
-        title: "Guest Arrival & Welcome Refreshment",
-        description: "Chilled Prosecco, sparkling botanical water, and live string quartet prelude",
-        responsibleParty: "Catering Captain & Ushers",
+        title: "Guest Arrival, Welcome Refreshments & String Quartet",
+        description:
+          "Chilled prosecco and sparkling botanical water served as guests are seated to live strings",
+        responsibleParty: "Banquet Lead & String Quartet",
         orderIndex: 3,
       },
       {
-        timeStart: "16:00",
-        timeEnd: "16:45",
+        timeStart: "15:30",
+        timeEnd: "16:30",
         phase: "Ceremony",
-        title: "Solemn Vow Exchange & Recessional",
-        description: "Processional, personal vows, exchange of rings, and celebratory petal toss",
-        responsibleParty: "Officiant & Couple",
+        title: "Wedding Ceremony, Exchange of Vows & Rings",
+        description:
+          "Processional, personalized vows, ring exchange, and celebratory rose-petal recessional",
+        responsibleParty: "Officiant & Logistics Director",
         orderIndex: 4,
       },
       {
         timeStart: "16:45",
-        timeEnd: "18:00",
-        phase: "Cocktail",
-        title: "Golden Hour Cocktail Reception & Canapés",
-        description: "Passed hors d'oeuvres, signature cocktails, and golden-hour sunset portraits",
-        responsibleParty: "Catering & Jazz Trio",
+        timeEnd: "18:15",
+        phase: "Cocktails",
+        title: "Sunset Cocktail Hour & Passed Canapés (Golden Hour)",
+        description:
+          "Golden hour sunset cocktails, acoustic jazz trio, and family group portraits in the olive grove",
+        responsibleParty: "Caterer & Jazz Trio",
         orderIndex: 5,
       },
       {
@@ -179,62 +270,7 @@ function generateWeddingBlueprint(
         orderIndex: 8,
       },
     ],
-    vendorChecklist: [
-      {
-        category: "Venue",
-        name: `Signature Wedding Venue in ${location}`,
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(venueCatering * 0.55),
-        deadlineOffsetDays: 330,
-        notes: "Lock date, verify rain plan tenting permits, and confirm 01:00 sound curfew",
-      },
-      {
-        category: "Catering",
-        name: "Artisanal Fine Dining & Wine Sommelier",
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(venueCatering * 0.45),
-        deadlineOffsetDays: 240,
-        notes: "Schedule private menu tasting; gather dietary allergy forms from all guests",
-      },
-      {
-        category: "Photography",
-        name: "Fine Art Film & Digital Photographer",
-        contactEmail: "",
-        contactPhone: "",
-        price: photoVideo,
-        deadlineOffsetDays: 270,
-        notes: "Confirm coverage hours, golden hour sunset timing, and second shooter contract",
-      },
-      {
-        category: "Floral & Decor",
-        name: "Botanical Floral Sculptor",
-        contactEmail: "",
-        contactPhone: "",
-        price: floralDecor,
-        deadlineOffsetDays: 150,
-        notes: "Approve tabletop centerpiece mockups and ceremony arch structural safety",
-      },
-      {
-        category: "Music & Band",
-        name: "Live Ceremony Strings & Evening Dance Ensemble",
-        contactEmail: "",
-        contactPhone: "",
-        price: music,
-        deadlineOffsetDays: 120,
-        notes: "Submit ceremony walk-down songs and curated 'Do Not Play' list for party",
-      },
-      {
-        category: "Coordination",
-        name: "Day-of Logistics Director",
-        contactEmail: "",
-        contactPhone: "",
-        price: coordination,
-        deadlineOffsetDays: 90,
-        notes: "Review load-in schedule with all vendors and organize wedding rehearsal",
-      },
-    ],
+    vendorChecklist: vendors,
     personalizedIdeas: [
       {
         category: "Guest Welcome",
@@ -279,9 +315,72 @@ function generateBirthdayBlueprint(
 
   const venueFood = Math.round(allocable * 0.48);
   const entertainment = Math.round(allocable * 0.22);
-  const decor = Math.round(allocable * 0.15);
+  const decor = Math.round(allocable * 0.14);
   const photo = Math.round(allocable * 0.1);
   const favors = allocable - (venueFood + entertainment + decor + photo);
+
+  const venueShare = Math.round(venueFood * 0.5);
+  const cateringShare = venueFood - venueShare;
+
+  const vendors = [
+    {
+      category: "Venue",
+      name: `Private Rooftop / Speakeasy in ${location}`,
+      contactEmail: "",
+      contactPhone: "",
+      price: venueShare,
+      deadlineOffsetDays: 90,
+      notes: "Exclusive space buyout, audio/visual setup, and private bar team",
+    },
+    {
+      category: "Catering & Bar",
+      name: "Artisanal Grazing Stations & Mixology Bartenders",
+      contactEmail: "",
+      contactPhone: "",
+      price: cateringShare,
+      deadlineOffsetDays: 60,
+      notes: "Curate 3 signature craft cocktails and savory tapas station",
+    },
+    {
+      category: "Live Entertainment",
+      name: "Soul/Funk Quartet & Headline DJ",
+      contactEmail: "",
+      contactPhone: "",
+      price: entertainment,
+      deadlineOffsetDays: 45,
+      notes: "Cocktail hour live quartet transitioning into high-energy dance DJ",
+    },
+    {
+      category: "Decor & Backdrops",
+      name: "Custom Neon Typography & Floral Photo Wall",
+      contactEmail: "",
+      contactPhone: "",
+      price: decor,
+      deadlineOffsetDays: 30,
+      notes: "Personalized milestone photo wall and ambient statement lighting",
+    },
+    {
+      category: "Photography & Video",
+      name: "Editorial Event Photographer + Reel Highlights",
+      contactEmail: "",
+      contactPhone: "",
+      price: photo,
+      deadlineOffsetDays: 30,
+      notes: "Candidate candids, VIP red carpet step-and-repeat, and toast reel",
+    },
+  ];
+
+  if (guests > 75) {
+    vendors.push({
+      category: "Event Production & Security",
+      name: "Dedicated Event Host & Door Security",
+      contactEmail: "",
+      contactPhone: "",
+      price: Math.round(budget * 0.04),
+      deadlineOffsetDays: 21,
+      notes: "Guest check-in registry, VIP wristbands, and flow control",
+    });
+  }
 
   return {
     title: title || `${theme} Milestone Celebration`,
@@ -292,15 +391,15 @@ function generateBirthdayBlueprint(
     contingencyReserve: contingency,
     budgetBreakdown: [
       {
-        category: "Venue & Specialty Bar",
+        category: "Venue & Private Space",
         name: `Private Speakeasy / Rooftop Lounge in ${location}`,
-        estimatedCost: Math.round(venueFood * 0.5),
+        estimatedCost: venueShare,
         notes: "Exclusive buyout with ambient lighting and private bar service",
       },
       {
         category: "Catering & Signature Mixology",
-        name: "Interactive Grazing Tables & Curated Cocktails",
-        estimatedCost: Math.round(venueFood * 0.5),
+        name: `Interactive Grazing Tables & Cocktails ($${Math.round(cateringShare / guests)}/guest)`,
+        estimatedCost: cateringShare,
         notes: "Handcrafted signature cocktail flight named after honoree's life milestones",
       },
       {
@@ -311,7 +410,7 @@ function generateBirthdayBlueprint(
       },
       {
         category: "Immersive Decor & Backdrop",
-        name: "Custom Neon Sign & Gilded Floral Wall",
+        name: "Custom Neon Sign & Statement Photo Wall",
         estimatedCost: decor,
         notes: "Photo-op statement wall with personalized retro typography",
       },
@@ -322,10 +421,17 @@ function generateBirthdayBlueprint(
         notes: "Captures guest candids, red carpet arrivals, and the milestone toast",
       },
       {
-        category: "Specialty Dessert & Favors",
+        category: "Specialty Dessert & Keepsakes",
         name: "Custom Multi-Tiered Cake & Keepsake Barware",
         estimatedCost: favors,
         notes: "Showstopper birthday cake reveal with sparklers and engraved rock glasses",
+      },
+      {
+        category: "Emergency Contingency Reserve",
+        name: "Protected 8% Contingency Reserve Fund",
+        estimatedCost: contingency,
+        notes:
+          "Reserve buffer for last-minute guest additions, extended bar tabs, or venue overtime",
       },
     ],
     runOfShowTimeline: [
@@ -350,71 +456,64 @@ function generateBirthdayBlueprint(
       {
         timeStart: "21:30",
         timeEnd: "22:00",
-        phase: "Milestone",
-        title: "Retrospective Video Homage & Champagne Toast",
-        description: "3-minute curated video roast/toast followed by celebratory words from VIPs",
-        responsibleParty: "Emcee & Honoree",
+        phase: "Tribute",
+        title: "Milestone Retrospective Video & Heartfelt Toasts",
+        description: "Short highlight film of milestone memories followed by champagne toast",
+        responsibleParty: "Host & AV Tech",
         orderIndex: 3,
       },
       {
         timeStart: "22:00",
-        timeEnd: "01:00",
-        phase: "Party",
-        title: "DJ Dance Ignition & Late-Night Dessert Bar",
-        description: "Lights dim, bass rises, and dessert station opens with espresso martinis",
-        responsibleParty: "DJ & Night Staff",
+        timeEnd: "22:20",
+        phase: "Highlight",
+        title: "Showstopper Birthday Cake Reveal & Sparklers",
+        description:
+          "Artisanal birthday cake brought out to fanfare music and indoor cold sparklers",
+        responsibleParty: "Pastry Chef & DJ",
         orderIndex: 4,
       },
-    ],
-    vendorChecklist: [
       {
-        category: "Venue",
-        name: "Boutique Rooftop or Speakeasy",
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(venueFood * 0.5),
-        deadlineOffsetDays: 120,
-        notes: "Confirm sound permit and VIP security details",
-      },
-      {
-        category: "Mixology & Catering",
-        name: "Artisanal Cocktail Catering",
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(venueFood * 0.5),
-        deadlineOffsetDays: 60,
-        notes: "Finalize signature cocktail ingredients and glassware rentals",
-      },
-      {
-        category: "Music",
-        name: "Live Band & Club DJ",
-        contactEmail: "",
-        contactPhone: "",
-        price: entertainment,
-        deadlineOffsetDays: 45,
-        notes: "Provide favorite eras playlist and milestone speech timing",
+        timeStart: "22:20",
+        timeEnd: "02:00",
+        phase: "Party",
+        title: "DJ Ignition, Dance Floor & Late Night Mixology",
+        description:
+          "High energy dance floor with DJ, glow accessories, and signature espresso martinis",
+        responsibleParty: "DJ & Bartenders",
+        orderIndex: 5,
       },
     ],
+    vendorChecklist: vendors,
     personalizedIdeas: [
       {
-        category: "Cocktail Program",
-        title: "Decade Cocktail Journey",
+        category: "Interactive Bar",
+        title: "Era-by-Era Cocktail Tasting Flight",
         description:
-          "Offer 3 cocktails representing 3 influential decades or chapters of the celebrant's life.",
-        aestheticTags: ["Cocktails", "Nostalgia", "Interactive"],
-        aiRationale: "Provides a delightful storytelling hook for guests at the bar.",
+          "Three signature drinks celebrating the honoree's 20s, 30s, and current golden chapter.",
+        aestheticTags: ["Mixology", "Nostalgia", "Interactive"],
+        aiRationale: "Transforms drinking into an engaging narrative storytelling experience.",
       },
       {
-        category: "Visual Theater",
-        title: "Retro Vinyl Guestbook",
+        category: "Visual Tribute",
+        title: "Retro Film Projection on Exposed Brick",
         description:
-          "Guests sign gold-ink messages on vintage vinyl records that can later be framed.",
-        aestheticTags: ["Music", "Vinyl", "Keepsake"],
-        aiRationale: "More engaging and displayable than standard paper guestbooks.",
+          "Silent loops of vintage family footage projected onto venue walls with soft ambient uplighting.",
+        aestheticTags: ["Cinematic", "Sentimental", "Atmospheric"],
+        aiRationale:
+          "Evokes nostalgia and sparks spontaneous guest reminiscing without halting the party.",
+      },
+      {
+        category: "Interactive Keepsake",
+        title: "Audio Guestbook Rotary Telephone",
+        description:
+          "A vintage rotary phone where guests leave audio voicemails and celebratory well wishes.",
+        aestheticTags: ["Vintage Tech", "Keepsake", "Memorable"],
+        aiRationale:
+          "Captures the laughter and energy of the night as an indelible audio treasure.",
       },
     ],
     logisticsAdvice:
-      "Julian's Advisory: Keep speech times under 12 minutes total to preserve the energy curve. Fluid cocktail-lounge seating keeps all 75 guests active and mingling.",
+      "Julian's Advisory: In milestone birthdays, never halt the music completely for long speeches. Keep toasts strictly under 15 minutes total, clustered right before the cake cutting to maintain dance floor momentum.",
   };
 }
 
@@ -425,119 +524,203 @@ function generateCommunityBlueprint(
   location: string,
   theme: string,
 ): GeneratedEventBlueprint {
-  const contingency = Math.round(budget * 0.1);
+  const contingency = Math.round(budget * 0.08);
   const allocable = budget - contingency;
 
+  const venuePermits = Math.round(allocable * 0.28);
+  const catering = Math.round(allocable * 0.26);
+  const avStaging = Math.round(allocable * 0.2);
+  const marketingPrinting = Math.round(allocable * 0.12);
+  const securityStaffing = allocable - (venuePermits + catering + avStaging + marketingPrinting);
+
+  const vendors = [
+    {
+      category: "Municipal & Venue",
+      name: `Civic Hall / Convention Center in ${location}`,
+      contactEmail: "",
+      contactPhone: "",
+      price: venuePermits,
+      deadlineOffsetDays: 120,
+      notes: "ADA accessibility verification, municipal noise permit, and insurance riders",
+    },
+    {
+      category: "Banquet Catering",
+      name: "High-Volume Banquet Caterer & Table Service",
+      contactEmail: "",
+      contactPhone: "",
+      price: catering,
+      deadlineOffsetDays: 90,
+      notes: "Plated gala dinner or heavy passed stations with clear allergen color coding",
+    },
+    {
+      category: "AV & Technical Production",
+      name: "Full Staging, Line-Array Audio & Multi-Cam Livestream",
+      contactEmail: "",
+      contactPhone: "",
+      price: avStaging,
+      deadlineOffsetDays: 60,
+      notes: "High-definition projection screens, wireless podium mics, and live streaming",
+    },
+    {
+      category: "Printing & Signage",
+      name: "Sponsor Banners, Auction Catalogs & Badges",
+      contactEmail: "",
+      contactPhone: "",
+      price: marketingPrinting,
+      deadlineOffsetDays: 30,
+      notes: "Sponsor step-and-repeat, printed auction catalog booklets, and attendee badges",
+    },
+    {
+      category: "Event Staffing & Safety",
+      name: "Professional Ushers, Security & Registration Team",
+      contactEmail: "",
+      contactPhone: "",
+      price: securityStaffing,
+      deadlineOffsetDays: 21,
+      notes: "Guest check-in tablets, bag inspection, and crowd flow directors",
+    },
+  ];
+
+  if (guests > 120) {
+    vendors.push({
+      category: "Charity Auctioneer",
+      name: "Licensed Benefit Auctioneer & Emcee",
+      contactEmail: "",
+      contactPhone: "",
+      price: Math.round(budget * 0.05),
+      deadlineOffsetDays: 45,
+      notes: "Fast-paced professional auctioneer to maximize live bidding and donations",
+    });
+  }
+
   return {
-    title: title || `${theme} Community Gala`,
-    themeSummary: `A civic-oriented community fundraiser in ${location} celebrating "${theme}" for ${guests} attendees.`,
-    curatedColorPalette: ["#003366", "#2B6CB0", "#E2E8F0", "#319795"],
+    title: title || `${theme} Civic & Community Gala`,
+    themeSummary: `A large-scale community and civic gala in ${location} celebrating "${theme}", calibrated for ${guests} attendees.`,
+    curatedColorPalette: ["#0F2027", "#203A43", "#2C5364", "#F4A261", "#FFFFFF"],
     targetBudget: budget,
     guestCount: guests,
     contingencyReserve: contingency,
     budgetBreakdown: [
       {
-        category: "Civic Hall & Facilities",
-        name: `Municipal Center / Pavilion in ${location}`,
-        estimatedCost: Math.round(allocable * 0.35),
-        notes: "Rental permit, sanitation, security, and utility connections",
+        category: "Venue Hire & Municipal Permits",
+        name: `Civic Center / Auditorium in ${location}`,
+        estimatedCost: venuePermits,
+        notes: "Public assembly permits, facility rental, stage, and ADA compliance clearance",
       },
       {
-        category: "Community Hospitality",
-        name: "Local Food Truck / Chef Collective Showcase",
-        estimatedCost: Math.round(allocable * 0.32),
-        notes: "Partnership with local independent food artisans ($ per meal ticket)",
+        category: "Banquet Catering & Refreshments",
+        name: `Plated Gala Dinner & Beverage Service ($${Math.round(catering / guests)}/guest)`,
+        estimatedCost: catering,
+        notes: "Multi-course banquet meal accommodating halal, kosher, and gluten-free diets",
       },
       {
-        category: "Audio/Visual & Staging",
-        name: "Public Address System, Staging & Lighting Rig",
-        estimatedCost: Math.round(allocable * 0.15),
-        notes: "Compliant audio gear, microphones, screens, and accessible stage ramp",
+        category: "Audio/Visual Staging & Livestream",
+        name: "Broadcast-Grade Audio, Lighting & Dual Projection",
+        estimatedCost: avStaging,
+        notes: "Podium microphones, stage spot lighting, line-array speakers, and stream feed",
       },
       {
-        category: "Permits, Insurance & Safety",
-        name: "Municipal Event Permit & First Aid Station",
-        estimatedCost: Math.round(allocable * 0.1),
-        notes: "Fire marshal permit, public liability rider, and licensed EMT standby",
+        category: "Sponsor Branding & Collateral",
+        name: "Step-and-Repeat, Programs & Digital Display",
+        estimatedCost: marketingPrinting,
+        notes: "High-resolution printed program books, sponsor logo wall, and directional signs",
       },
       {
-        category: "Signage & Wayfinding",
-        name: "High-Contrast ADA Signage & Program Booklets",
-        estimatedCost: Math.round(allocable * 0.08),
-        notes: "Braille guides, directional banners, and QR-code mobile program",
+        category: "Security, Ushers & Event Staff",
+        name: "Licensed Safety Personnel & Volunteer Coordination",
+        estimatedCost: securityStaffing,
+        notes: "Front-of-house ushers, EMT on standby, and security personnel",
+      },
+      {
+        category: "Emergency Contingency Reserve",
+        name: "Protected 8% Contingency Reserve Fund",
+        estimatedCost: contingency,
+        notes:
+          "Contingency reserve for technical overages, last-minute municipal fees, or AV add-ons",
       },
     ],
     runOfShowTimeline: [
       {
-        timeStart: "16:00",
-        timeEnd: "17:00",
+        timeStart: "17:30",
+        timeEnd: "18:45",
         phase: "Check-in",
-        title: "Community Welcome & Exhibition Walkthrough",
+        title: "Registration, Sponsor Step-and-Repeat & Silent Auction",
         description:
-          "Registration check-in, donation paddle pickup, and local artisan booth viewing",
-        responsibleParty: "Volunteer Lead",
+          "Guests receive printed badges, pose at sponsor banner, and place silent auction bids",
+        responsibleParty: "Registration Lead & Ushers",
         orderIndex: 1,
       },
       {
-        timeStart: "17:00",
-        timeEnd: "18:15",
-        phase: "Keynote",
-        title: "Civic Leaders Keynote & Youth Performance",
-        description:
-          "Opening addresses followed by a 20-minute municipal youth orchestra performance",
-        responsibleParty: "Stage Manager",
+        timeStart: "19:00",
+        timeEnd: "19:25",
+        phase: "Opening",
+        title: "Civic Welcome, National Anthem & Keynote Address",
+        description: "Official welcome remarks by organizers and inspirational keynote speech",
+        responsibleParty: "Gala Chair & Emcee",
         orderIndex: 2,
       },
       {
-        timeStart: "18:15",
-        timeEnd: "19:30",
-        phase: "Fundraising",
-        title: "Live Charity Auction & Grant Announcements",
-        description: "Dynamic auctioneer conducts live bids with digital scoreboard updates",
-        responsibleParty: "Auctioneer & Emcee",
+        timeStart: "19:25",
+        timeEnd: "20:30",
+        phase: "Dinner",
+        title: "Banquet Dinner Service & Musical Intermezzo",
+        description:
+          "Plated banquet served to all guests accompanied by live youth orchestra performance",
+        responsibleParty: "Banquet Captain & AV Lead",
         orderIndex: 3,
       },
       {
-        timeStart: "19:30",
-        timeEnd: "21:00",
-        phase: "Celebration",
-        title: "Community Feast & Local Band Finale",
-        description: "Catered meal, awards distribution, and celebratory community dancing",
-        responsibleParty: "Hospitality Lead",
+        timeStart: "20:30",
+        timeEnd: "21:15",
+        phase: "Auction",
+        title: "Live Charity Auction & Community Award Ceremony",
+        description:
+          "High-energy benefit auction followed by civic recognition awards presentation",
+        responsibleParty: "Benefit Auctioneer & Emcee",
         orderIndex: 4,
       },
-    ],
-    vendorChecklist: [
       {
-        category: "Venue & Permits",
-        name: "Municipal Parks & Recreation Department",
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(allocable * 0.35),
-        deadlineOffsetDays: 90,
-        notes: "Ensure amplified sound permit and insurance certificate are filed",
-      },
-      {
-        category: "Staging & Sound",
-        name: "Civic Sound & Rigging Co.",
-        contactEmail: "",
-        contactPhone: "",
-        price: Math.round(allocable * 0.15),
-        deadlineOffsetDays: 60,
-        notes: "Confirm ADA wheelchair ramp access for the main stage",
+        timeStart: "21:15",
+        timeEnd: "22:00",
+        phase: "Closing",
+        title: "Final Tally Reveal, Sponsor Thanks & Networking",
+        description:
+          "Announcement of fundraising total, closing remarks, and dessert networking reception",
+        responsibleParty: "All Committee Members",
+        orderIndex: 5,
       },
     ],
+    vendorChecklist: vendors,
     personalizedIdeas: [
       {
         category: "Community Engagement",
-        title: "Interactive Collective Mosaic Mural",
+        title: "Interactive Impact Pledge Wall",
         description:
-          "Each attendee places a painted ceramic tile into a 10-foot civic mural to be permanently mounted in the community hall.",
-        aestheticTags: ["Civic", "Inclusive", "Artisanal"],
-        aiRationale: "Provides a lasting communal footprint that outlives the single evening.",
+          "Attendees pin written pledges or donation leaves onto an artistic community tree mural.",
+        aestheticTags: ["Civic", "Interactive", "Inspiring"],
+        aiRationale:
+          "Provides tangible communal visualization of collective philanthropic contribution.",
+      },
+      {
+        category: "Sponsor Recognition",
+        title: "Dynamic Digital Sponsor Hall of Fame",
+        description:
+          "LED screens dynamically displaying sponsor impact metrics, matching donations, and acknowledgments.",
+        aestheticTags: ["Modern", "High-Tech", "High-Value"],
+        aiRationale:
+          "Delivers measurable value to institutional sponsors and encourages real-time bidding.",
+      },
+      {
+        category: "Inclusivity",
+        title: "Live Multilingual Audio Captioning",
+        description:
+          "Attendees scan a QR code to read live multilingual transcriptions and audio feeds on their devices.",
+        aestheticTags: ["Accessible", "Universal Design", "Empowering"],
+        aiRationale:
+          "Ensures complete ADA compliance and cultural accessibility for all attendees.",
       },
     ],
     logisticsAdvice:
-      "Maya's Advisory: Ensure ADA-compliant parking and ramp access are clearly signposted. Volunteer shifts must be strictly capped at 3 hours to maintain high morale and safety.",
+      "Maya's Advisory: Civic events require filing municipal permits at least 60–90 days in advance. Always conduct an ADA accessibility walkthrough to verify wheelchair ramps, accessible restroom paths, and service animal accommodations.",
   };
 }

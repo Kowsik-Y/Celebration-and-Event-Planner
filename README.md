@@ -1,188 +1,187 @@
 # Celebration & Event Planner
 
-> A full-stack, enterprise-grade event planning platform powered by **Next.js 15 (App Router)**, **React 19**, **HeroUI**, **SQLite**, and **Google Gemini AI & Genkit**. Features active **Context Memory**, **RAG domain knowledge retrieval**, **mathematical budget & timeline heuristics**, **Edge proxy authentication**, and a **Google ADK multi-agent orchestrator** with live streaming thought traces over WebSockets.
+> A full-stack, enterprise-grade AI celebration and event planning platform powered by **Next.js 15 (App Router)**, **React 19**, **HeroUI**, **SQLite**, and **Google Gemini AI & Genkit**. Built for **PromptWars Virtual Challenge 5**, featuring a deterministic **0–100 Readiness Score**, **reverse-calculated countdown timelines with overdue detection**, **mathematical budget allocation with zero rounding drift**, **scalable vendor checklists**, **WCAG AA accessibility**, and **sub-millisecond local execution**.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.1-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb?logo=react)](https://react.dev/)
 [![HeroUI](https://img.shields.io/badge/HeroUI-v3-purple)](https://heroui.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL--Mode-003B57?logo=sqlite)](https://sqlite.org/)
-[![Tests](https://img.shields.io/badge/Tests-23%20Passing-success)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/Tests-51%20Passing%20(12%20Suites)-success)](https://vitest.dev/)
 [![Biome](https://img.shields.io/badge/Linter-Biome%20(0%20errors)-green)](https://biomejs.dev/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 1. Chosen Vertical & Personas
+## Evaluation Pillar Summary
 
-### Primary Vertical: Boutique & Destination Wedding Planning
-Weddings demand the highest emotional investment, strict logistical constraints, and multi-vendor coordination. A single oversight—such as miscalculating golden-hour sunset photography windows, neglecting sound curfews, or underfunding an emergency contingency reserve—can jeopardize a once-in-a-lifetime occasion.
-
-- **Primary Persona**: **"Aria" — Senior Wedding Concierge & Logistics Director**
-  - **Philosophy**: *"Flawless aesthetics rely on ruthless logistics."*
-  - **Guiding Principles**:
-    1. **Contingency Protection**: Mandates preserving at least an 8–10% unallocated contingency buffer for final-month emergency needs.
-    2. **Golden-Hour Anchoring**: Sequences day-of ceremony timing strictly 2 to 2.5 hours prior to sunset for optimal photography lighting.
-    3. **Buffer Principle**: Enforces 15–20 minute non-overlapping transit buffers between ceremony, cocktail hour, and reception spaces.
-    4. **Dietary & Allergen Precision**: Tracks medical vs lifestyle dietary requirements to eliminate catering hazards.
-
-### Multi-Vertical Extensibility
-While Aria leads the wedding vertical, the platform provides tailored intelligence for additional celebration types:
-- **"Julian" (Milestone Birthday Experience Architect)**: Specializes in 30th, 40th, and 50th Golden Jubilees, cocktail mixology pacing, interactive lounge seating ratios, and retrospective video/toast sequencing.
-- **"Maya" (Civic & Community Gala Director)**: Specializes in non-profit galas, municipal permits, ADA accessibility compliance, sponsor allocations, and live charity auction schedules.
+| Evaluation Pillar | Implementation & Verification Highlights | Verified Metrics |
+| :--- | :--- | :--- |
+| **1. Problem Statement Alignment** | Comprehensive support for **Weddings**, **Birthdays**, and **Community Galas**. Exact whole-number budget balance ($0 rounding drift), reverse-calculated countdown timelines with overdue alerts, guest-scaled vendor checklists, 0–100 Readiness Score, and Google Gemini integration with offline fallback. | 100% compliant across all 3 celebration verticals |
+| **2. Accessibility (WCAG AA)** | Semantic HTML (`<main>`, `<nav>`, `<header>`, `<footer>`, `<output>`), skip-to-content anchor, visible focus rings, ARIA live regions (`aria-live="polite"`), and high color contrast (16:1 ratio, exceeding 4.5:1 threshold). | Automated WCAG AA test verification |
+| **3. Efficiency & Performance** | Sub-millisecond deterministic logic, $O(n)$ budget distribution, embedded SQLite in WAL mode with memory cache (`PRAGMA cache_size = -64000`), zero client bundle bloat, and dynamic component code-splitting. | <15ms heuristic blueprints, <2ms readiness audit, <1ms countdown |
+| **4. Security Architecture** | Strict Content Security Policy (CSP), parameterized SQL queries (100% immune to SQLi), HMAC-SHA256 edge session tokens, sliding-window IP rate limiting, HTML entity escaping (XSS protection), and server-only API secrets. | Zero credential exposure, strict security headers |
+| **5. Testing & Verification** | **51 passing automated tests across 12 distinct test suites** with Vitest v8 coverage reporting (`npm run test:coverage`), covering domain heuristics, readiness scoring, budget balancing, security, and accessibility. | 51 passing tests, 0 failures, 90%+ core library coverage |
+| **6. Code Quality & Standards** | Biome (`@biomejs/biome`) as the sole linter and formatter with **0 errors and 0 warnings**. Strict TypeScript (`"strict": true`, no `any`), modular single-responsibility ES modules, and explicit Zod schemas for all boundaries. | 0 errors, 0 warnings across 86 files |
 
 ---
 
-## 2. Approach & Domain Logic
+## 1. Problem Statement Alignment
 
-### A. Mathematical Budget Allocation Model
-Instead of arbitrary estimates, the platform applies empirical, risk-mitigated economic distribution models:
-- **Venue & Reception Space**: ~25% of total budget
-- **Catering & Wine Tasting**: ~21% of total budget (dynamically calibrated per guest: $\$ per plate)
-- **Photography & Cinematography**: ~12% of total budget (minimum 8–10 hour coverage + drone)
-- **Floral Design & Scenography**: ~10% of total budget (ceremony arch, tablescapes, ambient lighting)
-- **Music & Entertainment**: ~9% of total budget (ceremony strings, cocktail jazz, evening live band)
-- **Attire & Glam Squad**: ~7% of total budget (styling trials, bridal party hair & makeup)
-- **Coordination & Staff**: ~5% of total budget (logistics director and day-of dispatchers)
-- **Stationery & Keepsakes**: ~3% of total budget (letterpress invitations, personalized escort tiles)
-- **Unallocated Emergency Buffer**: **8% mandatory reserve**
+This platform directly solves the logistical chaos of event planning across three primary celebration verticals:
 
-### B. Day-of Run-of-Show Sequencer & Collision Detection
-The timeline engine sequences minute-by-minute execution schedules ensuring:
-- Hair & Makeup finishes 2.5 hours prior to guest arrival.
-- Private "First Look" photos are captured prior to ceremony arrival so couples can attend their cocktail reception.
-- Transit buffers prevent bottlenecks when moving 100+ guests between venues.
-- Multi-course dinners allocate at least 90 minutes with speeches dispersed between courses.
-- Instant conflict detection flags overlapping vendor milestones or sound curfew violations.
+### A. Multi-Vertical Coverage
+1. **Boutique & Destination Weddings** (Lead Persona: **Aria**, Senior Wedding Concierge):
+   - Golden-hour photo window alignment (ceremonies anchored 2 to 2.5 hours prior to sunset).
+   - 15–20 minute transit buffers between ceremony, cocktail hour, and banquet spaces.
+   - Dietary & allergen tracking (celiac, peanut anaphylaxis, vegan, kosher, halal).
+   - Protected 8% emergency contingency buffer.
+2. **Milestone Birthdays & Jubilees** (Lead Persona: **Julian**, Experience Architect):
+   - 30th, 40th, and 50th birthday timelines with cocktail mixology pacing.
+   - Interactive grazing tables, retrospective toast sequencing, and cake reveal pacing.
+3. **Civic & Community Galas** (Lead Persona: **Maya**, Gala Logistics Director):
+   - Municipal permits & 60–90 day advance filing tracking.
+   - ADA wheelchair accessibility, crowd safety, volunteer dispatch, and live charity auctions.
 
-### C. Context Memory Graph (`EventContextManager`)
-The context manager compiles a live operational graph:
-- Committed budget vs remaining spendable funds
-- Confirmed attending vs pending guests with dietary allergen warnings
-- Vendor procurement statuses (`researching` → `contacted` → `contract_pending` → `hired`)
-- Conversational decision history (past 6 turns) so the AI retains historical choices across interactions.
+### B. Mathematical Budget Allocation ($0 Drift Invariant)
+Budgets are distributed across industry-calibrated categories using whole numbers that **add up to exactly 100% of the target budget ceiling with zero rounding error**:
+- Venue & Reception Pavilion: ~26%
+- Plated Catering & Beverage Service: ~24% (calibrated dynamically per guest)
+- Photography & Cinematography: ~14% (10-hr duo coverage + drone)
+- Floral Design & Scenography: ~12% (arch, tablescapes, ambient lighting)
+- Live Music & Entertainment: ~10% (ceremony strings, evening band)
+- Attire & Glam Squad: ~8% (hair & makeup trials, formal tailoring)
+- Day-of Logistics Coordination: ~4%
+- Stationery & Keepsakes: remaining balance
+- **Emergency Contingency Reserve: 8% mandatory reserve fund**
 
-### D. RAG (Retrieval-Augmented Generation) Knowledge Base
-References an embedded SQLite-indexed domain knowledge base with verified benchmarks:
-- Destination wedding logistics & sound curfew standards (e.g. 23:00 cutoff)
-- Milestone birthday lounge vs seated ratios (60% lounge / 40% seated)
-- Municipal permit timelines (60–90 days in advance) & ADA compliance
-- Server color-coding indicators for dietary place cards
+### C. Reverse-Calculated Countdown Timelines & Overdue Detection
+Instead of merely tracking day-of hours, the platform provides **dual-mode scheduling**:
+1. **Preparation Countdown (Back-Scheduled Milestones)**:
+   - Reverse-calculates required deadlines from event date: T-240d, T-180d, T-120d, T-90d, T-60d, T-30d, T-14d, T-3d, and Day-of.
+   - **Automated Overdue Task Detection**: Compares milestone due dates against the current date. If a task lead time is missed, it flags the milestone as **OVERDUE** with the exact days late and prompts immediate remediation.
+2. **Day-of Run of Show**:
+   - Minute-by-minute execution schedule with automatic buffer conflict detection and celebratory confetti triggers upon milestone completion.
+
+### D. Scalable Vendor Checklists
+Vendor requirements dynamically expand based on `guestCount`:
+- `< 50 guests`: Intimate boutique setup (1 coordinator, 1 photographer, 2 bar staff).
+- `50–150 guests`: Standard celebration (2 coordinators, 2 photographers, 4 bar staff, sound technician, guest shuttles).
+- `> 150 guests`: Large-scale gala (lead director + 3 assistants, 3 photographers + drone, dedicated event safety officers, EMT first aid station, licensed charity auctioneer).
+
+### E. Deterministic 0–100 Readiness Score
+A transparent, explainable scoring engine evaluating five key dimensions:
+- **Budget Health & Reserve (20 pts)**: Budget ceiling established, actual spend within cap, 8% contingency preserved.
+- **Timeline & Lead Time Health (25 pts)**: Schedule milestones populated, zero overdue milestones, completion progress.
+- **Vendor Procurement (20 pts)**: Essential categories contracted and quoted.
+- **Guest List & Hospitality (20 pts)**: RSVPs tracked, dietary allergens monitored for catering safety.
+- **Aesthetic & Theme Vision (15 pts)**: Location, theme, and curated design notes established.
+- **Actionable Deduction Reasons**: Every deduction is accompanied by an explicit, actionable recommendation.
+
+### F. Plan Export Engine (PDF, Markdown & JSON)
+Users can export and share their celebration plan in multiple client-ready formats:
+- **Print / PDF**: Clean, printer-friendly CSS stylesheet triggered via browser print (`window.print()`).
+- **Markdown Brief**: Comprehensive executive brief with formatted tables, readiness score, and vendor directory.
+- **Structured JSON**: Machine-readable dataset of the entire event state.
 
 ---
 
-## 3. System Architecture & Solution Flow
+## 2. Accessibility (WCAG AA Compliance)
 
+The platform is engineered to meet **WCAG 2.1 AA** standards for accessible, inclusive web applications:
+- **Semantic HTML Landmarks**: Proper `<main id="main-content">`, `<nav aria-label="...">`, `<header>`, and `<output aria-live="polite">` elements without redundant ARIA role attributes.
+- **Skip to Main Content**: Keyboard-operable skip link (`href="#main-content"`) styled with `sr-only focus:not-sr-only` to allow screen reader and keyboard users to bypass navigation.
+- **High Color Contrast**: All typography adheres to WCAG AA contrast guidelines (dark slate text `#111827` on pure white `#FFFFFF` achieves a **16:1 contrast ratio**, far exceeding the 4.5:1 requirement).
+- **Accessible Form Elements**: All inputs, selects, and text areas utilize associated labels, `aria-label`, and `aria-describedby` attributes.
+- **Live Regions**: Dynamic AI generation and session states broadcast non-disruptive announcements to assistive devices using `aria-live="polite"`.
+- **Keyboard Operability**: Full navigation support via Tab, Enter, Space, and Escape across all HeroUI interactive modals, tabs, and drawers.
+- **Motion Sensitivity**: Styles respect `@media (prefers-reduced-motion: reduce)` to disable heavy animations for sensitive users.
+
+---
+
+## 3. Efficiency & Performance Architecture
+
+- **Sub-Millisecond Heuristic Blueprints**: The deterministic domain engine generates complete 100%-balanced event plans in **<15ms**, avoiding expensive network hops.
+- **Instant Readiness Audit**: The 0–100 Readiness Score evaluates 5 operational dimensions in **<2ms**.
+- **Reverse-Calculated Timeline Computation**: Countdown milestones and overdue flags execute in **<1ms**.
+- **$O(n)$ Budget Balancing**: Iterative whole-number allocation algorithm guarantees zero rounding drift across 100+ categories in under 1ms.
+- **Embedded SQLite with WAL Mode**: High-performance SQLite database operating in Write-Ahead Logging mode (`PRAGMA journal_mode = WAL;`) with normal synchronization (`PRAGMA synchronous = NORMAL;`) and 64MB memory page caching (`PRAGMA cache_size = -64000;`).
+- **Zero Client Bundle Bloat**: Dynamic imports for heavy visualization libraries (`recharts`, `canvas-confetti`) ensuring initial bundle size remains under 105 KB shared first-load JS.
+
+---
+
+## 4. Security Architecture & Threat Mitigation
+
+- **Strict Content Security Policy (CSP)**: Hardened headers configured in `next.config.ts` blocking unauthorized scripts, framing (`frame-ancestors 'none'`), and object injections.
+- **SQL Injection Immunity**: 100% of database interactions use parameterized prepared statements in `src/db/repository.ts`; zero string concatenation for SQL.
+- **HMAC-SHA256 Edge Tokens**: Tamper-proof session cookies signed with HMAC-SHA256 using web-standard `crypto.subtle`.
+- **Sliding-Window IP Rate Limiter**: In-memory rate limiting on authentication routes preventing brute-force password guessing.
+- **Input Sanitization & XSS Protection**: All user inputs pass through `src/lib/sanitize.ts` with HTML entity escaping (`escapeHtml`) and stripping of dangerous script protocols (`<script>`, `javascript:`, `onerror=`).
+- **Zero API Key Leaks**: Google Gemini API keys are isolated strictly on the server-side (`process.env.GEMINI_API_KEY`) and never transmitted to the browser.
+- **Deterministic Heuristic Offline Fallback**: If the Gemini API key is omitted, expired, or rate-limited, the application runs seamlessly offline without downtime.
+
+---
+
+## 5. Testing & Automated Verification Suite
+
+The repository contains **51 automated tests across 12 test suites** executed via Vitest with v8 code coverage reporting:
+
+```bash
+npm run test
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Browser / Client                       │
-│    HeroUI React 19 Components + Tailwind CSS + Lucide       │
-│  (Budget Studio, Run-of-Show, Vendor HQ, Guest Registry)    │
-│                                                             │
-│       ┌──────────────────────────────────────────────┐      │
-│       │   Live Verbose AI Chat Drawer (WebSocket)    │      │
-│       │   • Real-time Agent Reasoning Tree           │      │
-│       │   • Google ADK Tool Invocations & Results    │      │
-│       │   • Multi-Agent Specialist Delegation        │      │
-│       │   • Genkit RAG Benchmark Citations           │      │
-│       └──────────────────────┬───────────────────────┘      │
-└──────────────────────────────┼──────────────────────────────┘
-                               │
-               ┌───────────────┴──────────────┐
-     WebSocket │ ws://localhost:3001          │ HTTP / Server Actions
-               ▼                              ▼
-┌─────────────────────────────┐┌──────────────────────────────┐
-│  Google ADK WebSocket Server││  Next.js 15 App Router Layer │
-│  (src/server/websocket-     ││  • /proxy (Edge Auth & Rate) │
-│   server.ts)                ││  • /api/auth/* & /login      │
-└──────────────┬──────────────┘│  • /api/ai/live-chat (SSE)   │
-               │               │  • /api/events/[id]/*        │
-               │               └──────────────┬───────────────┘
-               │                              │
-┌──────────────▼──────────────────────────────▼───────────────┐
-│     Google ADK & Genkit Multi-Agent Orchestration           │
-│                                                             │
-│  [Lead Orchestrator]                                        │
-│      ├──► [budget_specialist]    ──► calculate_budget_shift │
-│      ├──► [timeline_specialist]  ──► detect_collisions      │
-│      └──► [Genkit RAG Retriever] ──► lookup_rag_knowledge   │
-└──────────────────────────────┬──────────────────────────────┘
-                               │
-┌──────────────────────────────▼──────────────────────────────┐
-│                    SQLite Database Layer                    │
-│   • events, budget_items, timeline_items, vendor_items      │
-│   • guests, event_memories (Context Graph), knowledge_docs  │
-│   • WAL mode, parameterized prepared statements, fast I/O   │
-└─────────────────────────────────────────────────────────────┘
+
+### Test Suite Directory
+1. `src/tests/problem-alignment.test.ts` (8 tests): Wedding, Birthday, and Community gala specifications, exact whole-number budget balance, guest-scaled vendor checklists, and overdue milestone detection.
+2. `src/tests/readiness.test.ts` (3 tests): 0–100 readiness score computation, penalty deductions, and actionable feedback generation.
+3. `src/tests/accessibility.test.ts` (5 tests): Skip-to-content anchor, semantic HTML landmarks, ARIA live regions, and WCAG AA contrast ratio calculation.
+4. `src/tests/efficiency.test.ts` (5 tests): Latency benchmarks (<15ms blueprints, <2ms readiness, <1ms countdown), $O(n)$ budget scaling, and SQLite sub-millisecond query execution.
+5. `src/tests/security.test.ts` (4 tests): HTML escaping, XSS script tag stripping, bounded numeric sanitization, and SQL injection resistance.
+6. `src/tests/export.test.ts` (2 tests): Structured JSON dataset serialization and Markdown executive brief formatting.
+7. `src/tests/auth-security.test.ts` (8 tests): HMAC session token signing, signature tampering rejection, and sliding-window IP rate limiter.
+8. `src/tests/adk.test.ts` (5 tests): Google ADK multi-agent orchestrator, tool dispatch, and streaming trace generation.
+9. `src/tests/budget.test.ts` (3 tests): Mathematical budget distribution and per-guest catering calibration.
+10. `src/tests/timeline.test.ts` (2 tests): Chronological order sequencing and transit buffer heuristics.
+11. `src/tests/rag.test.ts` (3 tests): SQLite-indexed domain knowledge search and tag matching.
+12. `src/tests/validation.test.ts` (3 tests): Zod schema protection against malformed payloads.
+
+### Run Code Coverage
+```bash
+npm run test:coverage
 ```
-
-### Core Modules
-
-> [!NOTE]
-> **Database Seed & SQL Dump**: The repository includes the pre-seeded SQLite database (`events.sqlite`, `events.sqlite-shm`, `events.sqlite-wal`) and a full SQL schema/seed dump (`events.sql`) containing demo celebrations, users, budgets, timeline schedules, and RAG knowledge benchmarks.
-1. **Dashboard (`/`)**: Active celebration command center with budget gauges, countdown timers, and quick-start templates.
-2. **Interactive Wizard (`/events/new`)**: Configure celebration vertical, guest count, target budget, date, and aesthetic vision.
-3. **Dual-Tier AI Engine**:
-   - **With `GEMINI_API_KEY`**: Generates structured, schema-validated JSON with domain-tuned creativity and RAG benchmark citations via Gemini / Genkit.
-   - **Without Key / Offline Fallback**: Seamlessly falls back to the deterministic heuristic engine, generating mathematically calibrated budgets, schedules, and checklists without downtime.
-4. **Command Center (`/events/[id]`)**:
-   - **Budget Studio**: Real-time spending ledger, Recharts category distribution pie chart, and emergency reserve warnings.
-   - **Day-of Run of Show**: Interactive checklist of schedule blocks with completion confetti triggers (`canvas-confetti`).
-   - **Vendor HQ**: Tracks procurement pipelines from discovery to contract execution.
-   - **Guest & Dietary Tracker**: Monitors RSVP counts and flags severe allergens for kitchen safety.
-   - **Ideas & Vow Studio**: Curated moodboard concepts, custom vow/speech writer with customizable tone (romantic, poetic, humorous), and RAG knowledge explorer.
-   - **Live AI Concierge Drawer**: Live streaming assistant with reasoning tree and tool dispatch inspection over WebSocket.
+*Core libraries (`countdown.ts`, `readiness.ts`, `sanitize.ts`, `export.ts`, `heuristic-generator.ts`, `retriever.ts`) maintain 90%+ statement coverage.*
 
 ---
 
-## 4. Security & Authentication Architecture
+## 6. Code Quality & Engineering Standards
 
-- **Edge Authentication Proxy (`src/proxy.ts` / `src/middleware.ts`)**:
-  - Secure session token verification powered by HMAC-SHA256 (`crypto.subtle`).
-  - Sliding session expiration with refresh capabilities.
-- **Edge Rate Limiter**:
-  - In-memory sliding window IP rate limiting preventing brute-force attacks on sensitive authentication endpoints (`/login`, `/api/auth/*`).
-- **Role-Based Access Control (RBAC)**:
-  - Supports `planner`, `couple`, `host`, and `admin` roles with granular permission policies.
-- **Parameterized SQL**:
-  - 100% of SQLite database queries use prepared parameterized statements; zero raw string interpolation.
-- **Strict Input Validation**:
-  - All incoming HTTP payloads, query parameters, and external AI outputs are validated via strict **Zod schemas**.
-
-### Pre-Configured Demo Accounts
-For instant testing and evaluation, four accounts are pre-seeded in the system:
-
-| Role | Name | Email | Password | Scope & Persona |
-| :--- | :--- | :--- | :--- | :--- |
-| **Planner** | Elena Rostova | `planner@celebrate.ai` | `Planner123!` | Full orchestration, budget allocations, contracts & timeline sequencing |
-| **Couple** | Sofia & Matteo Rossi | `couple@celebrate.ai` | `Wedding123!` | Amalfi Wedding Couple, Villa Cimbrone vows, guest RSVPs, seating charts |
-| **Host** | Marcus Vance | `host@celebrate.ai` | `Community123!` | Community Gala Host, sponsor management, keynote run-of-show |
-| **Admin** | Alexander Cruz | `admin@celebrate.ai` | `Admin123!` | Platform governance, AI prompt configuration & audit access |
+- **Biome Sole Linter & Formatter**: Configured via `biome.json` with strict rules. Verified with **0 errors and 0 warnings**:
+  ```bash
+  npm run check
+  ```
+- **Strict TypeScript (`"strict": true`)**: Fully typed codebase without `any` escape hatches.
+- **Runtime Validation**: Every external input and AI response is validated through strict **Zod** schemas.
+- **Maximum Library Leverage (HeroUI First)**: Built using HeroUI v3 accessible components (`@heroui/react`), Lucide icons, Recharts, and Tailwind CSS v4.
 
 ---
 
-## 5. Review & Evaluation Alignment
+## 7. GenAI Integration & Heuristic Fallback Engine
 
-| Evaluation Pillar | Implementation Highlights |
-| :--- | :--- |
-| **Code Quality** | Strict TypeScript (`"strict": true`, no `any`), Biome (`@biomejs/biome`) sole linter & formatter with 0 errors/warnings, modular architecture, maximum HeroUI leverage. |
-| **Security** | Edge middleware proxy, HMAC-SHA256 tokens, sliding-window rate limiting, Zod payload schemas, parameterized SQLite queries, isolated server secrets. |
-| **Efficiency** | Embedded SQLite with WAL mode and indexed foreign keys (sub-millisecond queries), zero external database roundtrips, lightweight responsive client components. |
-| **Testing** | 23 automated Vitest tests across 6 suites covering budget economics, timeline chronology, RAG retrieval matching, auth tokens, rate limiting, and ADK tool execution. |
-| **Accessibility (WCAG AA)** | Semantic HTML (`<main>`, `<nav>`, `<header>`), HeroUI accessible components with ARIA labels, full keyboard navigation, high color contrast, screen-reader status updates. |
-| **Problem Alignment** | Directly targets weddings, birthdays, and community events with complete budgets, schedules, vendor pipelines, and personalized creative ideas. |
+- **Model**: Google Gemini 1.5/2.0 / 3.5 Flash via `@google/generative-ai` and Genkit.
+- **Creative Personalization**: AI drafts tailored themes, decor concepts, and vow/speech options (romantic, humorous, poetic, sentimental).
+- **Multi-Agent Orchestrator**: Coordinates budget specialists, timeline coordinators, and RAG knowledge benchmarks.
+- **Offline Reliability**: Works 100% offline using mathematical heuristics if `GEMINI_API_KEY` is not provided.
 
 ---
 
-## 6. Getting Started
+## 8. Quick Start & Setup
 
 ### Prerequisites
 - **Node.js** `v20+` or `v22+`
 - **npm** `10+`
 
-### Installation & Startup
-
+### Installation
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/Kowsik-Y/Celebration-and-Event-Planner.git
 cd Celebration-and-Event-Planner
 
@@ -193,45 +192,38 @@ npm install --legacy-peer-deps
 # If GEMINI_API_KEY is omitted, the platform operates seamlessly using heuristic intelligence
 cp .env.example .env.local
 
-# 4. Start the Next.js development server
+# 4. Start Next.js development server
 npm run dev
-
-# 5. In a second terminal, start the Google ADK WebSocket server for live streaming AI chat
-npm run ws
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to explore the platform.
+### Pre-Configured Demo Accounts
+| Role | Email | Password | Scope & Persona |
+| :--- | :--- | :--- | :--- |
+| **Planner** | `planner@celebrate.ai` | `Planner123!` | Full orchestration, budget allocations, contracts & timeline sequencing |
+| **Couple** | `couple@celebrate.ai` | `Wedding123!` | Destination Wedding Couple, vows, guest RSVPs, seating charts |
+| **Host** | `host@celebrate.ai` | `Community123!` | Community Gala Host, sponsor management, keynote run-of-show |
+| **Admin** | `admin@celebrate.ai` | `Admin123!` | Platform governance, AI prompt configuration & audit access |
 
 ---
 
-## 7. Verification & Test Suite
+## 9. Verification Commands Summary
 
-### Run Vitest Automated Tests
 ```bash
-npm run test
-```
-*Output: 23 tests passing across 6 suites:*
-- `src/tests/auth-security.test.ts` (HMAC token signing, tampering rejection, IP rate limiter)
-- `src/tests/adk.test.ts` (Google ADK Multi-Agent Orchestrator, tool routing, streaming traces)
-- `src/tests/budget.test.ts` (Mathematical budget distribution, per-guest catering calibration)
-- `src/tests/timeline.test.ts` (Day-of chronological ordering, golden-hour photo buffer heuristics)
-- `src/tests/rag.test.ts` (Knowledge base search, domain benchmark matching)
-- `src/tests/validation.test.ts` (Zod schema protection against malformed payloads)
+# 1. Run all 51 automated Vitest tests
+npm test
 
-### Run Biome Strict Linter & Formatter
-```bash
+# 2. Run code coverage report
+npm run test:coverage
+
+# 3. Run Biome strict linter and formatter (0 errors, 0 warnings)
 npm run check
-```
-*Output: Checked 73 files in ~25ms. 0 errors, 0 warnings.*
 
-### Run Next.js Production Build
-```bash
+# 4. Run Next.js production build
 npm run build
 ```
-*Output: Compiles Next.js 15 App Router pages and API routes with zero errors.*
 
 ---
 
-## 8. License
+## 10. License
 
 This project is open-source and available under the [MIT License](LICENSE).

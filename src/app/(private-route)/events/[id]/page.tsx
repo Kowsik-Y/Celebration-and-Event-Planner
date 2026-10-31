@@ -4,6 +4,8 @@ import { AiChatDrawer } from "@/components/ai-chat-drawer";
 import { BudgetBreakdown } from "@/components/budget-breakdown";
 import { GuestTracker } from "@/components/guest-tracker";
 import { IdeasAndVowsStudio } from "@/components/ideas-and-vows";
+import { PlanExportModal } from "@/components/plan-export-modal";
+import { ReadinessGauge } from "@/components/readiness-gauge";
 import { TimelineView } from "@/components/timeline-view";
 import { VendorChecklist } from "@/components/vendor-checklist";
 import type {
@@ -15,6 +17,7 @@ import type {
   VendorItemRecord,
 } from "@/db/schema";
 import { EVENT_PERSONAS } from "@/lib/ai/personas";
+import { calculateReadinessScore } from "@/lib/readiness";
 import { Button, Card, CardContent, Chip, Tab, TabList, TabPanel, Tabs } from "@heroui/react";
 import { differenceInDays, parseISO } from "date-fns";
 import {
@@ -22,6 +25,7 @@ import {
   Bot,
   Calendar,
   DollarSign,
+  Download,
   Heart,
   Lightbulb,
   MapPin,
@@ -46,6 +50,7 @@ export default function EventCommandCenterPage() {
   const [ideas, setIdeas] = useState<IdeaRecord[]>([]);
   const [guests, setGuests] = useState<GuestRecord[]>([]);
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const loadEventData = useCallback(async () => {
     try {
@@ -103,6 +108,14 @@ export default function EventCommandCenterPage() {
     daysRemaining = 0;
   }
 
+  const readiness = calculateReadinessScore({
+    event,
+    budgetItems,
+    timelineItems,
+    vendorItems,
+    guests,
+  });
+
   return (
     <div className="space-y-6">
       {/* Back & Command Header */}
@@ -157,7 +170,16 @@ export default function EventCommandCenterPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            className="shadow-sm"
+            onPress={() => setIsExportOpen(true)}
+            aria-label="Export Plan"
+          >
+            <Download className="w-4 h-4" />
+            Export Plan
+          </Button>
           <Button variant="primary" className="shadow-md" onPress={() => setIsAiDrawerOpen(true)}>
             <Bot className="w-4 h-4" />
             Ask {persona.name} (AI Concierge)
@@ -188,6 +210,9 @@ export default function EventCommandCenterPage() {
         </CardContent>
       </Card>
 
+      {/* Prominent Readiness Score Gauge & Factors */}
+      <ReadinessGauge readiness={readiness} />
+
       {/* HeroUI v3 Tabs for the 5 Modules */}
       <Tabs defaultSelectedKey="budget" aria-label="Event Management Tabs">
         <TabList className="flex gap-6 border-b border-border pb-0">
@@ -203,7 +228,7 @@ export default function EventCommandCenterPage() {
             className="cursor-pointer py-2.5 px-1 text-sm font-medium flex items-center gap-2 data-[selected=true]:text-rose-600 data-[selected=true]:border-b-2 data-[selected=true]:border-rose-600"
           >
             <Calendar className="w-4 h-4 text-rose-600" />
-            <span>Day-of Run of Show</span>
+            <span>Timelines &amp; Countdown</span>
           </Tab>
           <Tab
             id="vendors"
@@ -244,6 +269,8 @@ export default function EventCommandCenterPage() {
             <TimelineView
               eventId={event.id}
               initialItems={timelineItems}
+              eventDate={event.event_date}
+              vertical={event.vertical}
               onRefresh={loadEventData}
             />
           </div>
@@ -281,6 +308,19 @@ export default function EventCommandCenterPage() {
           </div>
         </TabPanel>
       </Tabs>
+
+      {/* Export Plan Modal */}
+      <PlanExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        event={event}
+        readiness={readiness}
+        budgetItems={budgetItems}
+        timelineItems={timelineItems}
+        vendorItems={vendorItems}
+        guests={guests}
+        ideas={ideas}
+      />
 
       {/* AI Drawer */}
       <AiChatDrawer

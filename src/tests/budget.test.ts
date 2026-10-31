@@ -2,7 +2,7 @@ import { generateHeuristicBlueprint } from "@/lib/ai/heuristic-generator";
 import { describe, expect, it } from "vitest";
 
 describe("Budget Economics & Allocation Engine", () => {
-  it("generates a mathematically balanced wedding budget with protected contingency", () => {
+  it("generates a mathematically balanced wedding budget with protected contingency and 0 drift", () => {
     const input = {
       title: "Test Wedding",
       vertical: "wedding" as const,
@@ -16,15 +16,14 @@ describe("Budget Economics & Allocation Engine", () => {
     const blueprint = generateHeuristicBlueprint(input);
 
     expect(blueprint.targetBudget).toBe(60000);
-    expect(blueprint.contingencyReserve).toBeGreaterThanOrEqual(60000 * 0.08);
+    expect(blueprint.contingencyReserve).toBe(Math.round(60000 * 0.08));
 
-    // Sum of budget items + contingency should equal target budget (+/- rounding margin)
+    // Invariant: Sum of all budget items must EXACTLY equal target budget with zero rounding drift
     const totalEstimated = blueprint.budgetBreakdown.reduce(
       (sum, item) => sum + item.estimatedCost,
       0,
     );
-    const calculatedSum = totalEstimated + blueprint.contingencyReserve;
-    expect(Math.abs(calculatedSum - input.targetBudget)).toBeLessThanOrEqual(100);
+    expect(totalEstimated).toBe(input.targetBudget);
   });
 
   it("allocates Venue & Catering as the primary expense category (>40%)", () => {
@@ -61,5 +60,7 @@ describe("Budget Economics & Allocation Engine", () => {
     const lowPlan = generateHeuristicBlueprint(lowInput);
     expect(lowPlan.contingencyReserve).toBe(640);
     expect(lowPlan.budgetBreakdown.length).toBeGreaterThan(4);
+    const total = lowPlan.budgetBreakdown.reduce((sum, item) => sum + item.estimatedCost, 0);
+    expect(total).toBe(8000);
   });
 });

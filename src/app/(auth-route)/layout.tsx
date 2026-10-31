@@ -10,7 +10,9 @@ export const metadata: Metadata = {
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-surface-secondary/20 flex flex-col justify-center items-center py-10 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-xl">{children}</div>
+      <main id="main-content" tabIndex={-1} className="w-full max-w-xl outline-none">
+        {children}
+      </main>
     </div>
   );
 }
