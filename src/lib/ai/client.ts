@@ -19,6 +19,35 @@ function getGeminiClient(): GoogleGenerativeAI | null {
   return new GoogleGenerativeAI(apiKey);
 }
 
+const CANDIDATE_GEMINI_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+];
+
+async function generateWithFallbackModels(
+  gemini: GoogleGenerativeAI,
+  prompt: string,
+  generationConfig?: Record<string, unknown>,
+) {
+  let lastError: unknown = null;
+  for (const modelName of CANDIDATE_GEMINI_MODELS) {
+    try {
+      const model = gemini.getGenerativeModel({
+        model: modelName,
+        generationConfig,
+      });
+      const result = await model.generateContent(prompt);
+      return result;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Model ${modelName} failed or unavailable, attempting next candidate...`, err);
+    }
+  }
+  throw lastError;
+}
+
 /**
  * Generates a full structured event blueprint using Gemini with RAG domain knowledge,
  * falling back reliably to the heuristic engine if no API key is provided.
@@ -36,13 +65,6 @@ export async function generateEventPlan(
   }
 
   try {
-    const model = gemini.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-      },
-    });
-
     const ragDocs = retrieveRelevantKnowledge(
       `${input.theme} ${input.location} budget timeline`,
       input.vertical,
@@ -93,7 +115,9 @@ CRITICAL RULES:
 }
 `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithFallbackModels(gemini, prompt, {
+      responseMimeType: "application/json",
+    });
     const text = result.response.text();
     const rawParsed = JSON.parse(text);
     const validated = GeneratedEventBlueprintSchema.parse(rawParsed);
@@ -150,8 +174,10 @@ export async function chatWithAssistant(
       persona.systemPrompt,
     );
 
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(`${systemPrompt}\n\nUSER INQUIRY: ${userPrompt}`);
+    const result = await generateWithFallbackModels(
+      gemini,
+      `${systemPrompt}\n\nUSER INQUIRY: ${userPrompt}`,
+    );
     const reply = result.response.text();
 
     EventContextManager.recordMemory({
@@ -228,7 +254,6 @@ I choose you today, tomorrow, and in every season that follows."
   }
 
   try {
-    const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `
 You are Aria, luxury wedding concierge and speechwriter.
 Draft a moving, beautifully structured set of wedding vows or wedding speech.
@@ -245,7 +270,7 @@ Guidelines:
 - Avoid overused clichés; ground it in the specific memories provided.
 `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithFallbackModels(gemini, prompt);
     return result.response.text();
   } catch (error) {
     console.error("Vow generation error, using fallback template:", error);
